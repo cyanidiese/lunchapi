@@ -1,0 +1,679 @@
+basePath: /
+definitions:
+  errors.RequestError:
+    properties:
+      data:
+        type: object
+      message:
+        type: string
+      name:
+        type: string
+      status:
+        type: integer
+    type: object
+  models.Category:
+    properties:
+      id:
+        type: integer
+      title:
+        $ref: '#/definitions/models.Translation'
+        type: object
+    type: object
+  models.Dish:
+    properties:
+      calories:
+        type: number
+      categoryId:
+        type: integer
+      description:
+        $ref: '#/definitions/models.Translation'
+        type: object
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/models.Image'
+        type: array
+      name:
+        $ref: '#/definitions/models.Translation'
+        type: object
+      price:
+        type: number
+      providerId:
+        type: integer
+      weight:
+        type: number
+    type: object
+  models.Image:
+    properties:
+      guid:
+        type: string
+      id:
+        type: integer
+    type: object
+  models.Menu:
+    properties:
+      date:
+        type: string
+      deadline:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/models.MenuItem'
+        type: array
+      time:
+        type: string
+    type: object
+  models.MenuItem:
+    properties:
+      availableCount:
+        type: integer
+      dishId:
+        type: integer
+      id:
+        type: integer
+      initialCount:
+        type: integer
+      price:
+        type: number
+    type: object
+  models.Office:
+    properties:
+      address:
+        type: string
+      id:
+        type: integer
+      lat:
+        type: number
+      lng:
+        type: number
+      phone:
+        type: string
+      title:
+        $ref: '#/definitions/models.Translation'
+        type: object
+    type: object
+  models.Role:
+    properties:
+      name:
+        type: string
+      title:
+        type: string
+    type: object
+  models.Translation:
+    properties:
+      en:
+        type: string
+      ru:
+        type: string
+      ua:
+        type: string
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      image:
+        $ref: '#/definitions/models.Image'
+        type: object
+      isProvider:
+        type: boolean
+      isShop:
+        type: boolean
+      lastName:
+        type: string
+      office:
+        $ref: '#/definitions/models.Office'
+        type: object
+      providerId:
+        type: integer
+      role:
+        $ref: '#/definitions/models.Role'
+        type: object
+      timezone:
+        type: string
+    type: object
+  requests.AuthLoginRequest:
+    properties:
+      auctionGuid:
+        type: string
+      client_id:
+        type: string
+      client_secret:
+        type: string
+      grant_type:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  requests.MenuUpdateRequest:
+    properties:
+      deadline:
+        type: string
+      deliveryTime:
+        type: string
+      dishes:
+        items:
+          $ref: '#/definitions/requests.ObjectCounter'
+        type: array
+    type: object
+  requests.ObjectCounter:
+    properties:
+      count:
+        type: integer
+      id:
+        type: integer
+    type: object
+  responses.AuthLoginResponse:
+    properties:
+      data:
+        $ref: '#/definitions/responses.authLoginData'
+        type: object
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+  responses.GeneralResponse:
+    properties:
+      data:
+        type: object
+      message:
+        type: string
+      name:
+        type: string
+      status:
+        type: integer
+    type: object
+  responses.authLoginData:
+    properties:
+      error:
+        $ref: '#/definitions/responses.authLoginError'
+        type: object
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token:
+        type: string
+    type: object
+  responses.authLoginError:
+    properties:
+      error:
+        type: string
+      error_description:
+        type: string
+      message:
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Test REST API
+  version: "3.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Get Login Info
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AuthLoginRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.AuthLoginResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            items:
+              $ref: '#/definitions/responses.AuthLoginResponse'
+            type: array
+      summary: Login
+      tags:
+      - Auth
+  /categories/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Categories List
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Categories
+      tags:
+      - Categories
+  /dishes/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Dishes List
+      parameters:
+      - description: Provider ID
+        in: query
+        name: provider_id
+        type: integer
+      - description: Category ID
+        in: query
+        name: category_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Dish'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Dishes
+      tags:
+      - Dishes
+  /offices/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Offices List
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Office'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Offices
+      tags:
+      - Offices
+  /provider/{profile_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get Provider Profile
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Provider Profile
+      tags:
+      - Providers
+  /provider/{provider_id}/dish/{id}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Remove Provider's Dish by Id
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Dish Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.GeneralResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Remove Provider's Dish by Id
+      tags:
+      - Dishes
+  /provider/{provider_id}/dish/save:
+    post:
+      consumes:
+      - application/json
+      description: Save dish changes or create a new one if no dish was found by ID
+        in request body
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Dish Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Dish'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Dish'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Save Or Create Dish
+      tags:
+      - Dishes
+  /provider/{provider_id}/menus:
+    get:
+      consumes:
+      - application/json
+      description: Get List of Provider's Menus
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Menu'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get List of Provider's Menus
+      tags:
+      - Menus
+  /provider/{provider_id}/menus/{date}:
+    get:
+      consumes:
+      - application/json
+      description: Get Provider's Menu by Date
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Menu Date
+        in: path
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Menu'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Provider's Menu by Date
+      tags:
+      - Menus
+  /provider/{provider_id}/menus/{date}/clone/{new}:
+    post:
+      consumes:
+      - application/json
+      description: Clone Menu To Other Date
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Menu Date
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: New Date
+        in: path
+        name: new
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Menu'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Clone Menu To Other Date
+      tags:
+      - Menus
+  /provider/{provider_id}/menus/{date}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Remove Provider's Menu by Date
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Menu Date
+        in: path
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Remove Provider's Menu by Date
+      tags:
+      - Menus
+  /provider/{provider_id}/menus/{date}/save:
+    post:
+      consumes:
+      - application/json
+      description: Save Menu Changes
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Menu Date
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: Menu Items Description
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.MenuUpdateRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Menu'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Save Menu Changes
+      tags:
+      - Menus
+  /providers/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Providers List
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Providers
+      tags:
+      - Providers
+  /user/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Login Info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: User Info
+      tags:
+      - User
+securityDefinitions:
+  Authorization:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

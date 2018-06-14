@@ -1,0 +1,48 @@
+# Routes Config
+#
+# This file defines all application routes (Higher priority routes first)
+#
+
+# module:testrunner
+# module:jobs
+
+
+GET, OPTIONS     /                                       App.Index
+
+POST, OPTIONS     /auth/login                             AuthController.Login
+
+GET, OPTIONS     /user/index                             UserController.Index
+
+GET, OPTIONS     /offices/index                          OfficeController.Index
+GET, OPTIONS     /categories/index                       CategoryController.Index
+
+GET, OPTIONS     /providers/index                                  ProviderController.Index
+GET, OPTIONS     /provider/:provider_id                            ProviderController.Profile
+GET, OPTIONS     /provider/:provider_id/menus                      ProviderController.Menus
+GET, OPTIONS     /provider/:provider_id/menus/:date                ProviderController.Menu
+POST, OPTIONS    /provider/:provider_id/menus/:date/save           ProviderController.SaveMenu
+POST, OPTIONS    /provider/:provider_id/menus/:date/clone/:new     ProviderController.CloneMenu
+DELETE, OPTIONS  /provider/:provider_id/menus/:date/delete         ProviderController.DeleteMenu
+
+POST, OPTIONS    /provider/:provider_id/dish/save                  ProviderController.SaveDish
+DELETE, OPTIONS  /provider/:provider_id/dish/:id/delete            ProviderController.DeleteDish
+
+GET, OPTIONS     /dishes/index                           DishController.Index
+
+# Ignore favicon requests
+GET, OPTIONS     /favicon.ico                            404
+
+# Map static resources from the /app/public folder to the /public path
+
+GET, OPTIONS     /docs/*filepath                         Static.Serve("public/docs")
+GET, OPTIONS     /public/*filepath                       Static.Serve("public")
+
+# Catch all, this will route any request into the controller path
+#
+#                    **** WARNING ****
+# Enabling this exposes any controller and function to the web.
+# ** This is a serious security issue if used online **
+#
+# For rapid development uncomment the following to add new controller.action endpoints
+# without having to add them to the routes table.
+# *       /:controller/:action                    :controller.:action
