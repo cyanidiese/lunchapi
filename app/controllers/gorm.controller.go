@@ -25,6 +25,8 @@ func InitDB() {
 	if !DB.HasTable(&models.Category{}){ DB.CreateTable(&models.Category{}) }
 	if !DB.HasTable(&models.Dish{}){ DB.CreateTable(&models.Dish{}) }
 	if !DB.HasTable(&models.Menu{}){ DB.CreateTable(&models.Menu{}) }
+	if !DB.HasTable(&models.Favorite{}){ DB.CreateTable(&models.Favorite{}) }
+	if !DB.HasTable(&models.Order{}){ DB.CreateTable(&models.Order{}) }
 	if !DB.HasTable(&models.MenuItem{}){ DB.CreateTable(&models.MenuItem{})
 
 
@@ -166,7 +168,11 @@ func DbSeedInitialData(){
 	DB.Create(&secondDish)
 	DB.Save(&secondDish)
 
-	dessertCategory := models.Category{ Title: models.Translation{ En: "Dessert", Ua: "Десерт", Ru: "Дессерт" } }
+	saladsCategory := models.Category{ Title: models.Translation{ En: "Salads", Ua: "Салати", Ru: "Салаты" } }
+	DB.Create(&saladsCategory)
+	DB.Save(&saladsCategory)
+
+	dessertCategory := models.Category{ Title: models.Translation{ En: "Desserts", Ua: "Десерти", Ru: "Дессерты" } }
 	DB.Create(&dessertCategory)
 	DB.Save(&dessertCategory)
 

@@ -11,10 +11,9 @@ GET, OPTIONS     /                                       App.Index
 
 POST, OPTIONS     /auth/login                             AuthController.Login
 
-GET, OPTIONS     /user/index                             UserController.Index
-
 GET, OPTIONS     /offices/index                          OfficeController.Index
 GET, OPTIONS     /categories/index                       CategoryController.Index
+GET, OPTIONS     /dishes/index                           DishController.Index
 
 GET, OPTIONS     /providers/index                                  ProviderController.Index
 GET, OPTIONS     /provider/:provider_id                            ProviderController.Profile
@@ -23,11 +22,18 @@ GET, OPTIONS     /provider/:provider_id/menus/:date                ProviderContr
 POST, OPTIONS    /provider/:provider_id/menus/:date/save           ProviderController.SaveMenu
 POST, OPTIONS    /provider/:provider_id/menus/:date/clone/:new     ProviderController.CloneMenu
 DELETE, OPTIONS  /provider/:provider_id/menus/:date/delete         ProviderController.DeleteMenu
-
 POST, OPTIONS    /provider/:provider_id/dish/save                  ProviderController.SaveDish
 DELETE, OPTIONS  /provider/:provider_id/dish/:id/delete            ProviderController.DeleteDish
 
-GET, OPTIONS     /dishes/index                           DishController.Index
+GET, OPTIONS       /master/index                             MasterController.Index
+GET, OPTIONS       /master/stats/:fromDate/to/:toDate        MasterController.Stats
+GET, OPTIONS       /master/history/:fromDate/to/:toDate      MasterController.History
+POST, OPTIONS      /master/update                            MasterController.Update
+GET, OPTIONS       /master/orders/:provider_id/:date         MasterController.Orders
+POST, OPTIONS      /master/orders/:provider_id/:date/make    MasterController.MakeOrder
+GET, OPTIONS       /master/favorites                         MasterController.Favorites
+POST, OPTIONS      /master/favorites/add                     MasterController.AddFavorite
+DELETE, OPTIONS    /master/favorites/remove                  MasterController.RemoveFavorite
 
 # Ignore favicon requests
 GET, OPTIONS     /favicon.ico                            404

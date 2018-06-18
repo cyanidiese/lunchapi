@@ -76,6 +76,13 @@ definitions:
         type: integer
       initialCount:
         type: integer
+      item:
+        $ref: '#/definitions/models.Dish'
+        type: object
+      orders:
+        items:
+          $ref: '#/definitions/models.Order'
+        type: array
       price:
         type: number
     type: object
@@ -95,6 +102,20 @@ definitions:
         $ref: '#/definitions/models.Translation'
         type: object
     type: object
+  models.Order:
+    properties:
+      id:
+        type: integer
+      item:
+        $ref: '#/definitions/models.MenuItem'
+        type: object
+      itemId:
+        type: integer
+      orderedCount:
+        type: integer
+      user_id:
+        type: integer
+    type: object
   models.Role:
     properties:
       name:
@@ -113,6 +134,8 @@ definitions:
     type: object
   models.User:
     properties:
+      alias:
+        type: string
       email:
         type: string
       firstName:
@@ -172,6 +195,13 @@ definitions:
       id:
         type: integer
     type: object
+  requests.OrderingRequest:
+    properties:
+      menuItems:
+        items:
+          $ref: '#/definitions/requests.ObjectCounter'
+        type: array
+    type: object
   responses.AuthLoginResponse:
     properties:
       data:
@@ -193,6 +223,15 @@ definitions:
       status:
         type: integer
     type: object
+  responses.StatsResponse:
+    properties:
+      calories:
+        type: number
+      price:
+        type: number
+      weight:
+        type: number
+    type: object
   responses.authLoginData:
     properties:
       error:
@@ -213,6 +252,18 @@ definitions:
         type: string
       message:
         type: string
+    type: object
+  structs.IdsArray:
+    properties:
+      ids:
+        items:
+          type: int64
+        type: array
+    type: object
+  structs.SimpleId:
+    properties:
+      id:
+        type: integer
     type: object
 info:
   contact:
@@ -311,6 +362,258 @@ paths:
       summary: Get Dishes
       tags:
       - Dishes
+  /master/favorites:
+    get:
+      consumes:
+      - application/json
+      description: Make Order for some Dishes
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/structs.IdsArray'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Get Favorites
+      tags:
+      - Master
+  /master/favorites/add:
+    post:
+      consumes:
+      - application/json
+      description: Add Dish To Favorites
+      parameters:
+      - description: Dish Id
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/structs.SimpleId'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/structs.IdsArray'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Add Dish To Favorites
+      tags:
+      - Master
+  /master/favorites/remove:
+    delete:
+      consumes:
+      - application/json
+      description: Remove Dish From Favorites
+      parameters:
+      - description: Dish Id
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/structs.SimpleId'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/structs.IdsArray'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Remove Dish From Favorites
+      tags:
+      - Master
+  /master/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Login Info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Master Info
+      tags:
+      - Master
+  /master/orders/{provider_id}/{date}:
+    get:
+      consumes:
+      - application/json
+      description: Make Order for some Menu Items
+      parameters:
+      - description: Date
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Make Order
+      tags:
+      - Master
+  /master/orders/{provider_id}/{date}/make:
+    post:
+      consumes:
+      - application/json
+      description: Make Order for some Menu Items
+      parameters:
+      - description: Date
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Menu Items Ids with count ordering
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.OrderingRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Make Order
+      tags:
+      - Master
+  /master/stats/{fromDate}/to/{toDate}:
+    get:
+      consumes:
+      - application/json
+      description: Get Master Stats
+      parameters:
+      - description: Start Date
+        in: path
+        name: fromDate
+        required: true
+        type: string
+      - description: End Date
+        in: path
+        name: toDate
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.StatsResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Master Stats
+      tags:
+      - Master
+  /master/update:
+    post:
+      consumes:
+      - application/json
+      description: Update Master
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Master Update
+      tags:
+      - Master
   /offices/index:
     get:
       consumes:
@@ -648,29 +951,6 @@ paths:
       summary: Get Providers
       tags:
       - Providers
-  /user/index:
-    get:
-      consumes:
-      - application/json
-      description: Get Login Info
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/errors.RequestError'
-            type: object
-      security:
-      - Authorization: []
-      summary: User Info
-      tags:
-      - User
 securityDefinitions:
   Authorization:
     in: header

@@ -9,6 +9,8 @@ type MenuItem struct {
 	InitialCount   int64     `gorm:"column:initial_count" json:"initialCount"`
 	AvailableCount int64     `gorm:"column:available_count" json:"availableCount"`
 	Price          float64   `gorm:"column:price" json:"price"`
+	Orders         []Order   `gorm:"foreignkey:ItemId;association_foreignkey:Id" json:"orders"`
+	Dish           Dish      `gorm:"foreignkey:DishId;association_foreignkey:Id" json:"item"`
 	CreatedAt      time.Time `sql:"DEFAULT:current_timestamp" json:"-"`
 	UpdatedAt      time.Time `sql:"DEFAULT:current_timestamp" json:"-"`
 }

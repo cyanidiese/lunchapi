@@ -6,6 +6,7 @@ type User struct {
 	Id         int64    `gorm:"column:id" gorm:"primary_key" json:"id"`
 	FirstName  string    `gorm:"column:first_name" json:"firstName"`
 	LastName   string    `gorm:"column:last_name" json:"lastName"`
+	Alias      string    `gorm:"column:alias" json:"alias"`
 	Email      string    `gorm:"column:email" json:"email"`
 	Token      string    `gorm:"column:token" json:"-"`
 	IsProvider bool      `gorm:"column:is_provider" json:"isProvider"`

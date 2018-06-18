@@ -388,12 +388,22 @@ func (c ProviderController) SaveDish() revel.Result {
 		dish.Description.UpdatedAt = carbon.Now().Time
 		dishData.Description = dish.Description
 
+		for i, newImage := range dishData.Images {
+			for _, oldImage := range dish.Images {
+				if newImage.Guid == oldImage.Guid {
+					dishData.Images[i].Id = oldImage.Id
+					dishData.Images[i].CreatedAt = oldImage.CreatedAt
+					dishData.Images[i].UpdatedAt = oldImage.UpdatedAt
+				}
+			}
+		}
 	}
+
+	//DB.Where("id = ?", dish.Id).Delete(models.Dish{})
 
 	DB.Create(&dishData)
 	DB.Save(&dishData)
 
-	return c.RenderJSON(dishData.Images)
 	return c.RenderJSON(dish.Images)
 }
 
