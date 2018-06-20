@@ -7,28 +7,39 @@
 # module:jobs
 
 
-GET, OPTIONS     /                                       App.Index
+GET, OPTIONS     /                                   App.Index
 
-POST, OPTIONS     /auth/login                             AuthController.Login
+POST, OPTIONS     /auth/login                        AuthController.Login
 
-GET, OPTIONS     /offices/index                          OfficeController.Index
-GET, OPTIONS     /categories/index                       CategoryController.Index
-GET, OPTIONS     /dishes/index                           DishController.Index
+GET, OPTIONS     /offices/index                      OfficeController.Index
+GET, OPTIONS     /categories/index                   CategoryController.Index
+GET, OPTIONS     /dishes/index                       DishController.Index
 
-GET, OPTIONS     /providers/index                                  ProviderController.Index
-GET, OPTIONS     /provider/:provider_id                            ProviderController.Profile
-GET, OPTIONS     /provider/:provider_id/menus                      ProviderController.Menus
-GET, OPTIONS     /provider/:provider_id/menus/:date                ProviderController.Menu
-POST, OPTIONS    /provider/:provider_id/menus/:date/save           ProviderController.SaveMenu
-POST, OPTIONS    /provider/:provider_id/menus/:date/clone/:new     ProviderController.CloneMenu
-DELETE, OPTIONS  /provider/:provider_id/menus/:date/delete         ProviderController.DeleteMenu
-POST, OPTIONS    /provider/:provider_id/dish/save                  ProviderController.SaveDish
-DELETE, OPTIONS  /provider/:provider_id/dish/:id/delete            ProviderController.DeleteDish
+GET, OPTIONS     /comments/index                     CommentController.Index
+POST, OPTIONS    /comments/save                      CommentController.Save
+DELETE, OPTIONS  /comments/:id/delete                CommentController.Delete
+
+GET, OPTIONS     /notifications/index                NotificationController.Index
+POST, OPTIONS    /notifications/create               NotificationController.Create
+DELETE, OPTIONS  /notifications/:id/delete           NotificationController.Delete
+PUT, OPTIONS     /notifications/:id/approve          NotificationController.Approve
+PUT, OPTIONS     /notifications/:id/mark             NotificationController.Mark
+
+GET, OPTIONS     /providers/index                                     ProviderController.Index
+GET, OPTIONS     /provider/:provider_id                               ProviderController.Profile
+GET, OPTIONS     /provider/:provider_id/menus                         ProviderController.Menus
+GET, OPTIONS     /provider/:provider_id/menus/:date                   ProviderController.Menu
+POST, OPTIONS    /provider/:provider_id/menus/:date/save              ProviderController.SaveMenu
+POST, OPTIONS    /provider/:provider_id/menus/:date/clone/:new        ProviderController.CloneMenu
+DELETE, OPTIONS  /provider/:provider_id/menus/:date/delete            ProviderController.DeleteMenu
+POST, OPTIONS    /provider/:provider_id/dish/save                     ProviderController.SaveDish
+DELETE, OPTIONS  /provider/:provider_id/dish/:id/delete               ProviderController.DeleteDish
+GET, OPTIONS     /provider/:provider_id/history/:from_date/to/:to_date  ProviderController.History
 
 GET, OPTIONS       /master/index                             MasterController.Index
-GET, OPTIONS       /master/stats/:fromDate/to/:toDate        MasterController.Stats
-GET, OPTIONS       /master/history/:fromDate/to/:toDate      MasterController.History
 POST, OPTIONS      /master/update                            MasterController.Update
+GET, OPTIONS       /master/stats/:from_date/to/:to_date      MasterController.Stats
+GET, OPTIONS       /master/history/:from_date/to/:to_date    MasterController.History
 GET, OPTIONS       /master/orders/:provider_id/:date         MasterController.Orders
 POST, OPTIONS      /master/orders/:provider_id/:date/make    MasterController.MakeOrder
 GET, OPTIONS       /master/favorites                         MasterController.Favorites
@@ -36,7 +47,7 @@ POST, OPTIONS      /master/favorites/add                     MasterController.Ad
 DELETE, OPTIONS    /master/favorites/remove                  MasterController.RemoveFavorite
 
 # Ignore favicon requests
-GET, OPTIONS     /favicon.ico                            404
+GET, OPTIONS       /favicon.ico                            404
 
 # Map static resources from the /app/public folder to the /public path
 

@@ -97,6 +97,158 @@
                 }
             }
         },
+        "/comments/index": {
+            "get": {
+                "description": "Get Comments List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Get Comments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Dish ID",
+                        "name": "dish_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Menu Item ID",
+                        "name": "item_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Owner ID",
+                        "name": "owner_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Comment"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/save": {
+            "post": {
+                "description": "Add or update your Comment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Save Comment",
+                "parameters": [
+                    {
+                        "description": "Comment Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Comment"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Comment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{id}/delete": {
+            "delete": {
+                "description": "Delete Comment By Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Delete Comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.GeneralResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
         "/dishes/index": {
             "get": {
                 "description": "Get Dishes List",
@@ -283,6 +435,67 @@
                 }
             }
         },
+        "/master/history/{from_date}/to/{to_date}": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Get Master Orders History",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Master"
+                ],
+                "summary": "Master Orders History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date",
+                        "name": "from_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date",
+                        "name": "to_date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Order"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
         "/master/index": {
             "get": {
                 "security": [
@@ -437,7 +650,7 @@
                 }
             }
         },
-        "/master/stats/{fromDate}/to/{toDate}": {
+        "/master/stats/{from_date}/to/{to_date}": {
             "get": {
                 "security": [
                     {
@@ -459,14 +672,14 @@
                     {
                         "type": "string",
                         "description": "Start Date",
-                        "name": "fromDate",
+                        "name": "from_date",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "End Date",
-                        "name": "toDate",
+                        "name": "to_date",
                         "in": "path",
                         "required": true
                     }
@@ -514,6 +727,18 @@
                     "Master"
                 ],
                 "summary": "Master Update",
+                "parameters": [
+                    {
+                        "description": "Menu Items Ids with count ordering",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/requests.UpdateProfileRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -524,6 +749,243 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/create": {
+            "post": {
+                "description": "Add or update your Notification",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Save Notification",
+                "parameters": [
+                    {
+                        "description": "Notification Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/requests.NotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Notification"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/index": {
+            "get": {
+                "description": "Get Notifications List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Get Notification",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Notification"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/approve": {
+            "put": {
+                "description": "Approve Notification By Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Approve Notification",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Notification Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.GeneralResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/delete": {
+            "delete": {
+                "description": "Delete Notification By Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete Notification",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Notification Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.GeneralResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/mark": {
+            "put": {
+                "description": "Toggle Mark Notification As Read",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Toggle Mark Notification As Read",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Notification Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.GeneralResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/errors.RequestError"
@@ -717,6 +1179,74 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/provider/{provider_id}/history/{from_date}/to/{to_date}": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Get Master Orders History",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Master"
+                ],
+                "summary": "Master Orders History",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider Id",
+                        "name": "provider_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start Date",
+                        "name": "from_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date",
+                        "name": "to_date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Order"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/errors.RequestError"
@@ -1057,6 +1587,33 @@
                 }
             }
         },
+        "models.Comment": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "dishId": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "itemId": {
+                    "type": "integer"
+                },
+                "owner": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "repliedId": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Dish": {
             "type": "object",
             "properties": {
@@ -1134,6 +1691,10 @@
                 "availableCount": {
                     "type": "integer"
                 },
+                "dish": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.Dish"
+                },
                 "dishId": {
                     "type": "integer"
                 },
@@ -1143,10 +1704,6 @@
                 "initialCount": {
                     "type": "integer"
                 },
-                "item": {
-                    "type": "object",
-                    "$ref": "#/definitions/models.Dish"
-                },
                 "orders": {
                     "type": "array",
                     "items": {
@@ -1155,6 +1712,29 @@
                 },
                 "price": {
                     "type": "number"
+                }
+            }
+        },
+        "models.Notification": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isApproved": {
+                    "type": "boolean"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "userNotes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserNotification"
+                    }
                 }
             }
         },
@@ -1194,6 +1774,10 @@
                 },
                 "itemId": {
                     "type": "integer"
+                },
+                "master": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
                 },
                 "orderedCount": {
                     "type": "integer"
@@ -1253,6 +1837,9 @@
                 "isShop": {
                     "type": "boolean"
                 },
+                "lang": {
+                    "type": "string"
+                },
                 "lastName": {
                     "type": "string"
                 },
@@ -1272,25 +1859,34 @@
                 }
             }
         },
+        "models.UserNotification": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "notificationId": {
+                    "type": "integer"
+                },
+                "owner": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.Notification"
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
         "requests.AuthLoginRequest": {
             "type": "object",
             "properties": {
-                "auctionGuid": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "client_secret": {
-                    "type": "string"
-                },
-                "grant_type": {
+                "email": {
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
@@ -1309,6 +1905,14 @@
                     "items": {
                         "$ref": "#/definitions/requests.ObjectCounter"
                     }
+                }
+            }
+        },
+        "requests.NotificationRequest": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         },
@@ -1334,18 +1938,52 @@
                 }
             }
         },
+        "requests.UpdateProfileRequest": {
+            "type": "object",
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "imageGuid": {
+                    "type": "string"
+                },
+                "lang": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "officeId": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "providerId": {
+                    "type": "integer"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
         "responses.AuthLoginResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "$ref": "#/definitions/responses.authLoginData"
+                "message": {
+                    "type": "string"
                 },
                 "statusCode": {
                     "type": "integer"
                 },
                 "success": {
                     "type": "boolean"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -1377,38 +2015,6 @@
                 },
                 "weight": {
                     "type": "number"
-                }
-            }
-        },
-        "responses.authLoginData": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "object",
-                    "$ref": "#/definitions/responses.authLoginError"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "refresh_token": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "responses.authLoginError": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "error_description": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
                 }
             }
         },

@@ -2,14 +2,16 @@ package controllers
 
 import (
 	"github.com/revel/revel"
+	"lunchapi/app/requests"
 	"lunchapi/app/responses"
 	"lunchapi/app/models"
 	"net/http"
     "crypto/rand"
 	"strings"
+	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"github.com/revel/revel/cache"
 	"time"
-	"fmt"
 )
 
 type AuthController struct {
@@ -27,37 +29,43 @@ type AuthController struct {
 // @Tags Auth
 func (c AuthController) Login() revel.Result {
 
-	response := responses.AuthLoginResponse{}
 	user := models.User{}
 
-	var jsonData map[string]string
-	c.Params.BindJSON(&jsonData)
-	//return c.RenderJSON(jsonData)
+	var authData requests.AuthLoginRequest
+	c.Params.BindJSON(&authData)
 
-	//TODO : detect real login credentials
-	var username string
+	defaultLoginErrorMessage := "Sorry, your login was invalid! Please check your password and try again."
 
-	if len(jsonData["username"]) > 0 {
-		username = jsonData["username"]
-	} else {
-		username = c.Params.Form.Get("username")
-		//password = c.Params.Form.Get("password")
+	c.Response.Status = http.StatusUnauthorized
+	response := responses.AuthLoginResponse{
+		Success : false,
+		Message : defaultLoginErrorMessage,
 	}
 
 	DB.
-		Where("`email` = ?", username).
+		Where("`email` = ?", authData.Email).
 		First(&user)
 
 	if user.Id == 0 {
-		response.Success = false
-		c.Response.Status = http.StatusUnauthorized
-		response.Data.Error.Message = "Sorry, your login was invalid! Please check your password and try again."
-		response.Data.Error.ErrorDescription = "Invalid username and password combination"
-		response.Data.Error.Error = "invalid_grant"
-	} else {
-		response.Success = true
-		response.Data.Token = user.Token
+		response.Message = "NO EMAIL " + authData.Email
+		return c.RenderJSON(response)
 	}
+
+	passwordMatch, err := AuthComparePasswords(user.Password, authData.Password)
+
+	if err != nil {
+		response.Message = err.Error()
+		return c.RenderJSON(response)
+	}
+	if !passwordMatch {
+		response.Message = "JUST MISMATCH"
+		return c.RenderJSON(response)
+	}
+
+	c.Response.Status = http.StatusOK
+	response.Success = true
+	response.Token = user.Token
+	response.Message = ""
 
 	return c.RenderJSON(response)
 }
@@ -65,8 +73,9 @@ func (c AuthController) Login() revel.Result {
 func AuthGetToken(request *revel.Request) string {
 	authHeader := request.GetHttpHeader("Authorization")
 	authToken := strings.Replace(authHeader, "Bearer ", "", -1)
-	authToken = "998d29a66db2a80dcae77fefa0a4e503" //TODO : detect real token for provider
+	//authToken = "998d29a66db2a80dcae77fefa0a4e503" //TODO : detect real token for provider
 	authToken = "b6428312ed326f744849fd67ecb46b0f" //TODO : detect real token for master
+	//authToken = "ebdc113c0b0ddbc076fad0b958307860" //TODO : detect real token for admin
 	return authToken
 }
 
@@ -79,12 +88,13 @@ func AuthGetCurrentUser(request *revel.Request) models.User {
 	cacheKey := "user_" + authToken
 	if err := cache.Get(cacheKey, &user); err != nil {
 		DB.
+			Where("`is_disabled` != 1").
 			Where("`token` = ?", authToken).
 			Preload("Image").
 			Preload("Role").
 			First(&user)
 
-		go cache.Set(cacheKey, user, 30*time.Minute)
+		go cache.Set(cacheKey, user, 5*time.Minute)
 	}
 	return user
 }
@@ -105,4 +115,30 @@ func AuthRandToken() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
+
+func AuthHashPassword(password string) (string, error) {
+
+	pwd := []byte(password)
+	hashed := ""
+
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.DefaultCost)
+	if err == nil {
+		hashed = string(hash)
+	}
+
+	return hashed, err
+}
+
+func AuthComparePasswords(storedPwd string, plainPwd string) (bool, error){
+
+	byteHash := []byte(storedPwd)
+	bytePwd := []byte(plainPwd)
+
+	err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)
+	if err != nil {
+		return false, err
+	}
+
+	return true, err
 }

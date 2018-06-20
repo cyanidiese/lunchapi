@@ -19,6 +19,24 @@ definitions:
         $ref: '#/definitions/models.Translation'
         type: object
     type: object
+  models.Comment:
+    properties:
+      body:
+        type: string
+      dishId:
+        type: integer
+      id:
+        type: integer
+      itemId:
+        type: integer
+      owner:
+        $ref: '#/definitions/models.User'
+        type: object
+      ownerId:
+        type: integer
+      repliedId:
+        type: integer
+    type: object
   models.Dish:
     properties:
       calories:
@@ -70,21 +88,36 @@ definitions:
     properties:
       availableCount:
         type: integer
+      dish:
+        $ref: '#/definitions/models.Dish'
+        type: object
       dishId:
         type: integer
       id:
         type: integer
       initialCount:
         type: integer
-      item:
-        $ref: '#/definitions/models.Dish'
-        type: object
       orders:
         items:
           $ref: '#/definitions/models.Order'
         type: array
       price:
         type: number
+    type: object
+  models.Notification:
+    properties:
+      body:
+        type: string
+      id:
+        type: integer
+      isApproved:
+        type: boolean
+      ownerId:
+        type: integer
+      userNotes:
+        items:
+          $ref: '#/definitions/models.UserNotification'
+        type: array
     type: object
   models.Office:
     properties:
@@ -111,6 +144,9 @@ definitions:
         type: object
       itemId:
         type: integer
+      master:
+        $ref: '#/definitions/models.User'
+        type: object
       orderedCount:
         type: integer
       user_id:
@@ -149,6 +185,8 @@ definitions:
         type: boolean
       isShop:
         type: boolean
+      lang:
+        type: string
       lastName:
         type: string
       office:
@@ -162,19 +200,25 @@ definitions:
       timezone:
         type: string
     type: object
+  models.UserNotification:
+    properties:
+      id:
+        type: integer
+      is_read:
+        type: boolean
+      notificationId:
+        type: integer
+      owner:
+        $ref: '#/definitions/models.Notification'
+        type: object
+      userId:
+        type: integer
+    type: object
   requests.AuthLoginRequest:
     properties:
-      auctionGuid:
-        type: string
-      client_id:
-        type: string
-      client_secret:
-        type: string
-      grant_type:
+      email:
         type: string
       password:
-        type: string
-      username:
         type: string
     type: object
   requests.MenuUpdateRequest:
@@ -187,6 +231,11 @@ definitions:
         items:
           $ref: '#/definitions/requests.ObjectCounter'
         type: array
+    type: object
+  requests.NotificationRequest:
+    properties:
+      message:
+        type: string
     type: object
   requests.ObjectCounter:
     properties:
@@ -202,15 +251,37 @@ definitions:
           $ref: '#/definitions/requests.ObjectCounter'
         type: array
     type: object
+  requests.UpdateProfileRequest:
+    properties:
+      alias:
+        type: string
+      firstName:
+        type: string
+      imageGuid:
+        type: string
+      lang:
+        type: string
+      lastName:
+        type: string
+      officeId:
+        type: integer
+      password:
+        type: string
+      providerId:
+        type: integer
+      timezone:
+        type: string
+    type: object
   responses.AuthLoginResponse:
     properties:
-      data:
-        $ref: '#/definitions/responses.authLoginData'
-        type: object
+      message:
+        type: string
       statusCode:
         type: integer
       success:
         type: boolean
+      token:
+        type: string
     type: object
   responses.GeneralResponse:
     properties:
@@ -231,27 +302,6 @@ definitions:
         type: number
       weight:
         type: number
-    type: object
-  responses.authLoginData:
-    properties:
-      error:
-        $ref: '#/definitions/responses.authLoginError'
-        type: object
-      expires_in:
-        type: integer
-      refresh_token:
-        type: string
-      token:
-        type: string
-    type: object
-  responses.authLoginError:
-    properties:
-      error:
-        type: string
-      error_description:
-        type: string
-      message:
-        type: string
     type: object
   structs.IdsArray:
     properties:
@@ -331,6 +381,108 @@ paths:
       summary: Get Categories
       tags:
       - Categories
+  /comments/{id}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Comment By Id
+      parameters:
+      - description: Comment Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.GeneralResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Delete Comment
+      tags:
+      - Comments
+  /comments/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Comments List
+      parameters:
+      - description: Dish ID
+        in: query
+        name: dish_id
+        type: integer
+      - description: Menu Item ID
+        in: query
+        name: item_id
+        type: integer
+      - description: Owner ID
+        in: query
+        name: owner_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Comment'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Comments
+      tags:
+      - Comments
+  /comments/save:
+    post:
+      consumes:
+      - application/json
+      description: Add or update your Comment
+      parameters:
+      - description: Comment Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Comment'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Comment'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Save Comment
+      tags:
+      - Comments
   /dishes/index:
     get:
       consumes:
@@ -452,6 +604,46 @@ paths:
       summary: Remove Dish From Favorites
       tags:
       - Master
+  /master/history/{from_date}/to/{to_date}:
+    get:
+      consumes:
+      - application/json
+      description: Get Master Orders History
+      parameters:
+      - description: Start Date
+        in: path
+        name: from_date
+        required: true
+        type: string
+      - description: End Date
+        in: path
+        name: to_date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Master Orders History
+      tags:
+      - Master
   /master/index:
     get:
       consumes:
@@ -552,7 +744,7 @@ paths:
       summary: Make Order
       tags:
       - Master
-  /master/stats/{fromDate}/to/{toDate}:
+  /master/stats/{from_date}/to/{to_date}:
     get:
       consumes:
       - application/json
@@ -560,12 +752,12 @@ paths:
       parameters:
       - description: Start Date
         in: path
-        name: fromDate
+        name: from_date
         required: true
         type: string
       - description: End Date
         in: path
-        name: toDate
+        name: to_date
         required: true
         type: string
       produces:
@@ -596,6 +788,14 @@ paths:
       consumes:
       - application/json
       description: Update Master
+      parameters:
+      - description: Menu Items Ids with count ordering
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateProfileRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -614,6 +814,166 @@ paths:
       summary: Master Update
       tags:
       - Master
+  /notifications/{id}/approve:
+    put:
+      consumes:
+      - application/json
+      description: Approve Notification By Id
+      parameters:
+      - description: Notification Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.GeneralResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Approve Notification
+      tags:
+      - Notifications
+  /notifications/{id}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Notification By Id
+      parameters:
+      - description: Notification Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.GeneralResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Delete Notification
+      tags:
+      - Notifications
+  /notifications/{id}/mark:
+    put:
+      consumes:
+      - application/json
+      description: Toggle Mark Notification As Read
+      parameters:
+      - description: Notification Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.GeneralResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Toggle Mark Notification As Read
+      tags:
+      - Notifications
+  /notifications/create:
+    post:
+      consumes:
+      - application/json
+      description: Add or update your Notification
+      parameters:
+      - description: Notification Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.NotificationRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Notification'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Save Notification
+      tags:
+      - Notifications
+  /notifications/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Notifications List
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Notification'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Get Notification
+      tags:
+      - Dishes
   /offices/index:
     get:
       consumes:
@@ -746,6 +1106,51 @@ paths:
       summary: Save Or Create Dish
       tags:
       - Dishes
+  /provider/{provider_id}/history/{from_date}/to/{to_date}:
+    get:
+      consumes:
+      - application/json
+      description: Get Master Orders History
+      parameters:
+      - description: Provider Id
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: Start Date
+        in: path
+        name: from_date
+        required: true
+        type: string
+      - description: End Date
+        in: path
+        name: to_date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Master Orders History
+      tags:
+      - Master
   /provider/{provider_id}/menus:
     get:
       consumes:

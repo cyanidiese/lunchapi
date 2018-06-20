@@ -27,6 +27,9 @@ func InitDB() {
 	if !DB.HasTable(&models.Menu{}){ DB.CreateTable(&models.Menu{}) }
 	if !DB.HasTable(&models.Favorite{}){ DB.CreateTable(&models.Favorite{}) }
 	if !DB.HasTable(&models.Order{}){ DB.CreateTable(&models.Order{}) }
+	if !DB.HasTable(&models.Comment{}){ DB.CreateTable(&models.Comment{}) }
+	if !DB.HasTable(&models.Notification{}){ DB.CreateTable(&models.Notification{}) }
+	if !DB.HasTable(&models.UserNotification{}){ DB.CreateTable(&models.UserNotification{}) }
 	if !DB.HasTable(&models.MenuItem{}){ DB.CreateTable(&models.MenuItem{})
 
 
@@ -43,6 +46,11 @@ func InitDB() {
 		&models.Category{},
 		&models.Dish{},
 		&models.Menu{},
+		&models.Favorite{},
+		&models.Order{},
+		&models.Comment{},
+		&models.Notification{},
+		&models.UserNotification{},
 		&models.MenuItem{})
 }
 

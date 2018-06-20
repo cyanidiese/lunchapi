@@ -10,6 +10,10 @@ import (
 	"github.com/uniplaces/carbon"
 	"strings"
 	"lunchapi/app/responses"
+	"lunchapi/app/helpers"
+	"github.com/revel/revel/cache"
+	"time"
+	"fmt"
 )
 
 type MasterController struct {
@@ -25,7 +29,7 @@ type MasterController struct {
 // @Router /master/index [get]
 // @Security Authorization
 // @Tags Master
-func (c MasterController) Index() revel.Result { //TODO: Implement this
+func (c MasterController) Index() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
 		c.Response.Status = http.StatusUnauthorized
@@ -41,6 +45,7 @@ func (c MasterController) Index() revel.Result { //TODO: Implement this
 // @Description Update Master
 // @Accept  json
 // @Produce  json
+// @Param body  body requests.UpdateProfileRequest true "Menu Items Ids with count ordering"
 // @Success 200 {object} models.User
 // @Success 401 {object} errors.RequestError
 // @Router /master/update [post]
@@ -55,6 +60,87 @@ func (c MasterController) Update() revel.Result {
 
 	user := AuthGetCurrentUser(c.Request)
 
+	var requestBody requests.UpdateProfileRequest
+	c.Params.BindJSON(&requestBody)
+
+	appliedChanges := false
+
+	fmt.Println(requestBody)
+
+	if !helpers.IsEmptyString(requestBody.Password){
+		pass, err := AuthHashPassword(requestBody.Password)
+		if err != nil {
+			return c.RenderJSON(errors.ErrorBadRequest("You cannot use this password. Please choose another one", nil))
+		}
+		user.Password = pass
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyString(requestBody.FirstName){
+		user.FirstName = requestBody.FirstName
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyString(requestBody.LastName){
+		user.LastName = requestBody.LastName
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyString(requestBody.Alias){
+		user.Alias = requestBody.Alias
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyNumber(requestBody.ProviderId){
+		user.ProviderId = requestBody.ProviderId
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyNumber(requestBody.OfficeId){
+		user.OfficeId = requestBody.OfficeId
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyString(requestBody.Timezone){
+		user.Timezone = requestBody.Timezone
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyString(requestBody.Language){
+		user.Language = requestBody.Language
+		appliedChanges = true
+	}
+
+	if !helpers.IsEmptyString(requestBody.ImageGuid){
+		if user.Image.Guid != requestBody.ImageGuid {
+
+			DB.Where("id = ?", user.Image.Id).Delete(models.Image{})
+			image := models.Image{
+				UserId: user.Id,
+				Guid: requestBody.ImageGuid,
+			}
+			DB.Create(&image)
+			DB.Save(&image)
+			appliedChanges = true
+		}
+	}
+
+	if appliedChanges {
+
+		DB.Save(&user)
+
+		cacheKey := "user_" + user.Token
+		DB.
+			Where("`is_disabled` != 1").
+			Where("`token` = ?", user.Token).
+			Preload("Image").
+			Preload("Role").
+			First(&user)
+
+		go cache.Set(cacheKey, user, 30*time.Minute)
+
+	}
+
 	return c.RenderJSON(user)
 }
 
@@ -62,12 +148,12 @@ func (c MasterController) Update() revel.Result {
 // @Description Get Master Stats
 // @Accept  json
 // @Produce  json
-// @Param fromDate path string true "Start Date"
-// @Param toDate path string true "End Date"
+// @Param from_date path string true "Start Date"
+// @Param to_date path string true "End Date"
 // @Success 200 {object} responses.StatsResponse
 // @Success 400 {object} errors.RequestError
 // @Success 401 {object} errors.RequestError
-// @Router /master/stats/{fromDate}/to/{toDate} [get]
+// @Router /master/stats/{from_date}/to/{to_date} [get]
 // @Security Authorization
 // @Tags Master
 func (c MasterController) Stats() revel.Result {
@@ -79,8 +165,8 @@ func (c MasterController) Stats() revel.Result {
 
 	master := AuthGetCurrentUser(c.Request)
 
-	fromDate := c.Params.Route.Get("fromDate")
-	toDate := c.Params.Route.Get("toDate")
+	fromDate := c.Params.Route.Get("from_date")
+	toDate := c.Params.Route.Get("to_date")
 
 	fromDateParsed, fromDateErr := carbon.Parse(carbon.DateFormat, fromDate, master.Timezone)
 	toDateParsed, toDateErr := carbon.Parse(carbon.DateFormat, toDate, master.Timezone)
@@ -119,12 +205,12 @@ func (c MasterController) Stats() revel.Result {
 // @Description Get Master Orders History
 // @Accept  json
 // @Produce  json
-// @Param fromDate path string true "Start Date"
-// @Param toDate path string true "End Date"
+// @Param from_date path string true "Start Date"
+// @Param to_date path string true "End Date"
 // @Success 200 {array} models.Order
 // @Success 400 {object} errors.RequestError
 // @Success 401 {object} errors.RequestError
-// @Router /master/history/{fromDate}/to/{toDate} [get]
+// @Router /master/history/{from_date}/to/{to_date} [get]
 // @Security Authorization
 // @Tags Master
 func (c MasterController) History() revel.Result {
@@ -136,8 +222,8 @@ func (c MasterController) History() revel.Result {
 
 	master := AuthGetCurrentUser(c.Request)
 
-	fromDate := c.Params.Route.Get("fromDate")
-	toDate := c.Params.Route.Get("toDate")
+	fromDate := c.Params.Route.Get("from_date")
+	toDate := c.Params.Route.Get("to_date")
 
 	fromDateParsed, fromDateErr := carbon.Parse(carbon.DateFormat, fromDate, master.Timezone)
 	toDateParsed, toDateErr := carbon.Parse(carbon.DateFormat, toDate, master.Timezone)

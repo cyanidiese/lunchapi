@@ -451,6 +451,68 @@ func (c ProviderController) DeleteDish() revel.Result {
 }
 
 
+// @Summary Master Orders History
+// @Description Get Master Orders History
+// @Accept  json
+// @Produce  json
+// @Param provider_id path int true "Provider Id"
+// @Param from_date path string true "Start Date"
+// @Param to_date path string true "End Date"
+// @Success 200 {array} models.Order
+// @Success 400 {object} errors.RequestError
+// @Success 401 {object} errors.RequestError
+// @Router /provider/{provider_id}/history/{from_date}/to/{to_date} [get]
+// @Security Authorization
+// @Tags Master
+func (c ProviderController) History() revel.Result {
+	//Deny Unauthorized users
+	if authorized := AuthCheck(c.Request); !authorized {
+		c.Response.Status = http.StatusUnauthorized
+		return c.RenderJSON(errors.ErrorUnauthorized(""))
+	}
+
+	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
+		return c.RenderJSON(err)
+	}
+
+	provider := AuthGetCurrentUser(c.Request)
+
+	fromDate := c.Params.Route.Get("from_date")
+	toDate := c.Params.Route.Get("to_date")
+
+	fromDateParsed, fromDateErr := carbon.Parse(carbon.DateFormat, fromDate, provider.Timezone)
+	toDateParsed, toDateErr := carbon.Parse(carbon.DateFormat, toDate, provider.Timezone)
+
+	if fromDateErr != nil {
+		c.Response.Status = http.StatusBadRequest
+		return c.RenderJSON(errors.ErrorBadRequest("Wrong date range" + fromDateErr.Error(), nil))
+	}
+	if toDateErr != nil {
+		c.Response.Status = http.StatusBadRequest
+		return c.RenderJSON(errors.ErrorBadRequest("Wrong date range" + toDateErr.Error(), nil))
+	}
+
+	orders := []models.Order{}
+	DB.
+		Where("created_at > ? ", fromDateParsed.StartOfDay().DateTimeString()).
+		Where("updated_at < ? ", toDateParsed.EndOfDay().DateTimeString()).
+		Where("item_id IN (?)",
+		DB.
+			Model(models.MenuItem{}).
+			Select("id").Where("menu_id IN (?)",
+			DB.
+				Model(models.Menu{}).
+				Select("id").Where("provider_id = ?", provider.Id).
+				QueryExpr()).
+			QueryExpr()).
+		Preload("Master").
+		Preload("Master.Image").
+		Preload("MenuItem").
+		Find(&orders)
+
+	return c.RenderJSON(orders)
+}
+
 func (c ProviderController) checkProviderPermissions() errors.RequestError {
 
 	resultError := errors.RequestError{}
@@ -468,9 +530,11 @@ func (c ProviderController) checkProviderPermissions() errors.RequestError {
 
 	DB.Where("id = ?", providerId).Find(&provider)
 
-	if user.Id != provider.Id {
-		c.Response.Status = http.StatusForbidden
-		return errors.ErrorForbidden("You have no permissions to change any data of this user")
+	if user.Role.Name != "admin" {
+		if user.Id != provider.Id {
+			c.Response.Status = http.StatusForbidden
+			return errors.ErrorForbidden("You have no permissions to change any data of this user")
+		}
 	}
 
 	return resultError
@@ -536,7 +600,7 @@ func (c ProviderController) getMenuData(date string, newDate string) (requests.M
 }
 
 func (c ProviderController) updateMenuData(date string, menuItemsData requests.MenuUpdateRequest) (models.Menu, errors.RequestError) {
-
+//TODO: cannot make delivery after deadline
 	provider := AuthGetCurrentUser(c.Request)
 
 	menu := models.Menu{}
