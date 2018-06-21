@@ -10,10 +10,8 @@ import (
 	"github.com/uniplaces/carbon"
 	"strings"
 	"lunchapi/app/responses"
-	"lunchapi/app/helpers"
 	"github.com/revel/revel/cache"
 	"time"
-	"fmt"
 )
 
 type MasterController struct {
@@ -45,7 +43,7 @@ func (c MasterController) Index() revel.Result {
 // @Description Update Master
 // @Accept  json
 // @Produce  json
-// @Param body  body requests.UpdateProfileRequest true "Menu Items Ids with count ordering"
+// @Param body  body requests.UpdateProfileRequest true "Profile Details"
 // @Success 200 {object} models.User
 // @Success 401 {object} errors.RequestError
 // @Router /master/update [post]
@@ -63,66 +61,10 @@ func (c MasterController) Update() revel.Result {
 	var requestBody requests.UpdateProfileRequest
 	c.Params.BindJSON(&requestBody)
 
-	appliedChanges := false
-
-	fmt.Println(requestBody)
-
-	if !helpers.IsEmptyString(requestBody.Password){
-		pass, err := AuthHashPassword(requestBody.Password)
-		if err != nil {
-			return c.RenderJSON(errors.ErrorBadRequest("You cannot use this password. Please choose another one", nil))
-		}
-		user.Password = pass
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyString(requestBody.FirstName){
-		user.FirstName = requestBody.FirstName
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyString(requestBody.LastName){
-		user.LastName = requestBody.LastName
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyString(requestBody.Alias){
-		user.Alias = requestBody.Alias
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyNumber(requestBody.ProviderId){
-		user.ProviderId = requestBody.ProviderId
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyNumber(requestBody.OfficeId){
-		user.OfficeId = requestBody.OfficeId
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyString(requestBody.Timezone){
-		user.Timezone = requestBody.Timezone
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyString(requestBody.Language){
-		user.Language = requestBody.Language
-		appliedChanges = true
-	}
-
-	if !helpers.IsEmptyString(requestBody.ImageGuid){
-		if user.Image.Guid != requestBody.ImageGuid {
-
-			DB.Where("id = ?", user.Image.Id).Delete(models.Image{})
-			image := models.Image{
-				UserId: user.Id,
-				Guid: requestBody.ImageGuid,
-			}
-			DB.Create(&image)
-			DB.Save(&image)
-			appliedChanges = true
-		}
+	appliedChanges, resultError, respStatus := UpdateUserData(requestBody, &user, false)
+	if respStatus != 0 {
+		c.Response.Status = respStatus
+		return c.RenderJSON(resultError)
 	}
 
 	if appliedChanges {
@@ -248,8 +190,8 @@ func (c MasterController) History() revel.Result {
 	return c.RenderJSON(orders)
 }
 
-// @Summary Make Order
-// @Description Make Order for some Menu Items
+// @Summary Orders List By Date
+// @Description Orders List By Date
 // @Accept  json
 // @Produce  json
 // @Param date path string true "Date"
@@ -258,7 +200,7 @@ func (c MasterController) History() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Router /master/orders/{provider_id}/{date} [get]
 // @Security Authorization
-// @Tags Master
+// @Tags Orders
 func (c MasterController) Orders() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
@@ -304,7 +246,7 @@ func (c MasterController) Orders() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Router /master/orders/{provider_id}/{date}/make [post]
 // @Security Authorization
-// @Tags Master
+// @Tags Orders
 func (c MasterController) MakeOrder() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
@@ -422,7 +364,7 @@ func (c MasterController) MakeOrder() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Router /master/favorites [get]
 // @Security Authorization
-// @Tags Master
+// @Tags Favorites
 func (c MasterController) Favorites() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
@@ -455,7 +397,7 @@ func (c MasterController) Favorites() revel.Result {
 // @Success 404 {object} errors.RequestError
 // @Router /master/favorites/add [post]
 // @Security Authorization
-// @Tags Master
+// @Tags Favorites
 func (c MasterController) AddFavorite() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
@@ -499,7 +441,7 @@ func (c MasterController) AddFavorite() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Router /master/favorites/remove [delete]
 // @Security Authorization
-// @Tags Master
+// @Tags Favorites
 func (c MasterController) RemoveFavorite() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {

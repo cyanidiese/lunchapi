@@ -149,7 +149,7 @@ definitions:
         type: object
       orderedCount:
         type: integer
-      user_id:
+      userId:
         type: integer
     type: object
   models.Role:
@@ -192,6 +192,8 @@ definitions:
       office:
         $ref: '#/definitions/models.Office'
         type: object
+      officeId:
+        type: integer
       providerId:
         type: integer
       role:
@@ -204,12 +206,15 @@ definitions:
     properties:
       id:
         type: integer
-      is_read:
+      isRead:
         type: boolean
+      notification:
+        $ref: '#/definitions/models.Notification'
+        type: object
       notificationId:
         type: integer
-      owner:
-        $ref: '#/definitions/models.Notification'
+      user:
+        $ref: '#/definitions/models.User'
         type: object
       userId:
         type: integer
@@ -359,6 +364,37 @@ paths:
       summary: Login
       tags:
       - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Get Login Info
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AuthLoginRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.AuthLoginResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            items:
+              $ref: '#/definitions/responses.AuthLoginResponse'
+            type: array
+      summary: Register
+      tags:
+      - Auth
   /categories/index:
     get:
       consumes:
@@ -379,6 +415,28 @@ paths:
             $ref: '#/definitions/errors.RequestError'
             type: object
       summary: Get Categories
+      tags:
+      - Categories
+  /categories/save:
+    post:
+      consumes:
+      - application/json
+      description: Add or update Categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Add or update Categories
       tags:
       - Categories
   /comments/{id}/delete:
@@ -536,7 +594,7 @@ paths:
       - Authorization: []
       summary: Get Favorites
       tags:
-      - Master
+      - Favorites
   /master/favorites/add:
     post:
       consumes:
@@ -572,7 +630,7 @@ paths:
       - Authorization: []
       summary: Add Dish To Favorites
       tags:
-      - Master
+      - Favorites
   /master/favorites/remove:
     delete:
       consumes:
@@ -603,7 +661,7 @@ paths:
       - Authorization: []
       summary: Remove Dish From Favorites
       tags:
-      - Master
+      - Favorites
   /master/history/{from_date}/to/{to_date}:
     get:
       consumes:
@@ -671,7 +729,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Make Order for some Menu Items
+      description: Orders List By Date
       parameters:
       - description: Date
         in: path
@@ -699,9 +757,9 @@ paths:
             type: object
       security:
       - Authorization: []
-      summary: Make Order
+      summary: Orders List By Date
       tags:
-      - Master
+      - Orders
   /master/orders/{provider_id}/{date}/make:
     post:
       consumes:
@@ -743,7 +801,7 @@ paths:
       - Authorization: []
       summary: Make Order
       tags:
-      - Master
+      - Orders
   /master/stats/{from_date}/to/{to_date}:
     get:
       consumes:
@@ -973,7 +1031,7 @@ paths:
             type: object
       summary: Get Notification
       tags:
-      - Dishes
+      - Notifications
   /offices/index:
     get:
       consumes:
@@ -994,6 +1052,28 @@ paths:
             $ref: '#/definitions/errors.RequestError'
             type: object
       summary: Get Offices
+      tags:
+      - Offices
+  /offices/save:
+    post:
+      consumes:
+      - application/json
+      description: Add or update Office
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Office'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Add or update Office
       tags:
       - Offices
   /provider/{profile_id}:
@@ -1148,9 +1228,9 @@ paths:
             type: object
       security:
       - Authorization: []
-      summary: Master Orders History
+      summary: Provider Orders History
       tags:
-      - Master
+      - Providers
   /provider/{provider_id}/menus:
     get:
       consumes:
@@ -1354,6 +1434,28 @@ paths:
             $ref: '#/definitions/errors.RequestError'
             type: object
       summary: Get Providers
+      tags:
+      - Providers
+  /providers/save:
+    post:
+      consumes:
+      - application/json
+      description: Add or update Providers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      summary: Add or update Providers
       tags:
       - Providers
 securityDefinitions:

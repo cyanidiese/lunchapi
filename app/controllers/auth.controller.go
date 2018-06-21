@@ -70,12 +70,64 @@ func (c AuthController) Login() revel.Result {
 	return c.RenderJSON(response)
 }
 
+// @Summary Register
+// @Description Get Login Info
+// @Accept  json
+// @Produce  json
+// @Param body body requests.AuthLoginRequest true "Request Body"
+// @Success 200 {array} responses.AuthLoginResponse
+// @Success 401 {array} responses.AuthLoginResponse
+// @Router /auth/register [post]
+// @Tags Auth
+func (c AuthController) Register() revel.Result { //TODO: IMPLEMENT THIS
+
+	user := models.User{}
+
+	var authData requests.AuthLoginRequest
+	c.Params.BindJSON(&authData)
+
+	defaultLoginErrorMessage := "Sorry, your login was invalid! Please check your password and try again."
+
+	c.Response.Status = http.StatusUnauthorized
+	response := responses.AuthLoginResponse{
+		Success : false,
+		Message : defaultLoginErrorMessage,
+	}
+
+	DB.
+		Where("`email` = ?", authData.Email).
+		First(&user)
+
+	if user.Id == 0 {
+		response.Message = "NO EMAIL " + authData.Email
+		return c.RenderJSON(response)
+	}
+
+	passwordMatch, err := AuthComparePasswords(user.Password, authData.Password)
+
+	if err != nil {
+		response.Message = err.Error()
+		return c.RenderJSON(response)
+	}
+	if !passwordMatch {
+		response.Message = "JUST MISMATCH"
+		return c.RenderJSON(response)
+	}
+
+	c.Response.Status = http.StatusOK
+	response.Success = true
+	response.Token = user.Token
+	response.Message = ""
+
+	return c.RenderJSON(response)
+}
+
 func AuthGetToken(request *revel.Request) string {
 	authHeader := request.GetHttpHeader("Authorization")
 	authToken := strings.Replace(authHeader, "Bearer ", "", -1)
 	//authToken = "998d29a66db2a80dcae77fefa0a4e503" //TODO : detect real token for provider
-	authToken = "b6428312ed326f744849fd67ecb46b0f" //TODO : detect real token for master
-	//authToken = "ebdc113c0b0ddbc076fad0b958307860" //TODO : detect real token for admin
+	//authToken = "b6428312ed326f744849fd67ecb46b0f" //TODO : detect real token for master
+	authToken = "ebdc113c0b0ddbc076fad0b958307860" //TODO : detect real token for admin
 	return authToken
 }
 

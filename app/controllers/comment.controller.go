@@ -25,6 +25,7 @@ type CommentController struct {
 // @Success 200 {array} models.Comment
 // @Success 401 {object} errors.RequestError
 // @Router /comments/index [get]
+// @Security Authorization
 // @Tags Comments
 func (c CommentController) Index() revel.Result {
 	//Deny Unauthorized users
@@ -67,6 +68,7 @@ func (c CommentController) Index() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Success 403 {object} errors.RequestError
 // @Router /comments/save [post]
+// @Security Authorization
 // @Tags Comments
 func (c CommentController) Save() revel.Result {
 	//Deny Unauthorized users
@@ -120,9 +122,10 @@ func (c CommentController) Save() revel.Result {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Comment Id"
-// @Success 200 {array} responses.GeneralResponse
+// @Success 200 {object} responses.GeneralResponse
 // @Success 401 {object} errors.RequestError
 // @Router /comments/{id}/delete [delete]
+// @Security Authorization
 // @Tags Comments
 func (c CommentController) Delete() revel.Result {
 	//Deny Unauthorized users

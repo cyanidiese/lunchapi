@@ -10,9 +10,14 @@
 GET, OPTIONS     /                                   App.Index
 
 POST, OPTIONS     /auth/login                        AuthController.Login
+POST, OPTIONS     /auth/register                     AuthController.Register
 
 GET, OPTIONS     /offices/index                      OfficeController.Index
+POST, OPTIONS    /offices/save                       OfficeController.Save
+
 GET, OPTIONS     /categories/index                   CategoryController.Index
+POST, OPTIONS    /categories/save                    CategoryController.Save
+
 GET, OPTIONS     /dishes/index                       DishController.Index
 
 GET, OPTIONS     /comments/index                     CommentController.Index
@@ -26,6 +31,7 @@ PUT, OPTIONS     /notifications/:id/approve          NotificationController.Appr
 PUT, OPTIONS     /notifications/:id/mark             NotificationController.Mark
 
 GET, OPTIONS     /providers/index                                     ProviderController.Index
+POST, OPTIONS    /provider/save                                       ProviderController.Save
 GET, OPTIONS     /provider/:provider_id                               ProviderController.Profile
 GET, OPTIONS     /provider/:provider_id/menus                         ProviderController.Menus
 GET, OPTIONS     /provider/:provider_id/menus/:date                   ProviderController.Menu

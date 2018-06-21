@@ -20,6 +20,7 @@ type DishController struct {
 // @Success 200 {array} models.Dish
 // @Success 401 {object} errors.RequestError
 // @Router /dishes/index [get]
+// @Security Authorization
 // @Tags Dishes
 func (c DishController) Index() revel.Result {
 	//Deny Unauthorized users

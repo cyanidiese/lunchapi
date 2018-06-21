@@ -21,7 +21,8 @@ type NotificationController struct {
 // @Success 200 {array} models.Notification
 // @Success 401 {object} errors.RequestError
 // @Router /notifications/index [get]
-// @Tags Dishes
+// @Security Authorization
+// @Tags Notifications
 func (c NotificationController) Index() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
@@ -63,6 +64,7 @@ func (c NotificationController) Index() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Success 403 {object} errors.RequestError
 // @Router /notifications/create [post]
+// @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Create() revel.Result {
 	//Deny Unauthorized users
@@ -102,10 +104,11 @@ func (c NotificationController) Create() revel.Result {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Notification Id"
-// @Success 200 {array} responses.GeneralResponse
+// @Success 200 {object} responses.GeneralResponse
 // @Success 400 {object} errors.RequestError
 // @Success 401 {object} errors.RequestError
 // @Router /notifications/{id}/delete [delete]
+// @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Delete() revel.Result {
 	//Deny Unauthorized users
@@ -150,10 +153,11 @@ func (c NotificationController) Delete() revel.Result {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Notification Id"
-// @Success 200 {array} responses.GeneralResponse
+// @Success 200 {object} responses.GeneralResponse
 // @Success 401 {object} errors.RequestError
 // @Success 403 {object} errors.RequestError
 // @Router /notifications/{id}/approve [put]
+// @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Approve() revel.Result {
 	//Deny Unauthorized users
@@ -234,10 +238,11 @@ func (c NotificationController) Approve() revel.Result {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Notification Id"
-// @Success 200 {array} responses.GeneralResponse
+// @Success 200 {object} responses.GeneralResponse
 // @Success 401 {object} errors.RequestError
 // @Success 403 {object} errors.RequestError
 // @Router /notifications/{id}/mark [put]
+// @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Mark() revel.Result {
 	//Deny Unauthorized users

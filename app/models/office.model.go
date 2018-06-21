@@ -10,7 +10,7 @@ type Office struct {
 	Lat        float64     `gorm:"column:lat" json:"lat"`
 	Lng        float64     `gorm:"column:lng" json:"lng"`
 	Address    string      `gorm:"column:address" json:"address"`
-	IsProvider bool        `gorm:"column:is_provider" json:"-"`
+	IsProvider bool        `gorm:"column:is_provider" json:"isProvider"`
 	CreatedAt  time.Time   `sql:"DEFAULT:current_timestamp" json:"-"`
 	UpdatedAt  time.Time   `sql:"DEFAULT:current_timestamp" json:"-"`
 }

@@ -24,6 +24,7 @@ type ProviderController struct {
 // @Success 200 {array} models.User
 // @Success 401 {object} errors.RequestError
 // @Router /providers/index [get]
+// @Security Authorization
 // @Tags Providers
 func (c ProviderController) Index() revel.Result {
 	//Deny Unauthorized users
@@ -53,6 +54,87 @@ func (c ProviderController) Index() revel.Result {
 	return c.RenderJSON(providers)
 }
 
+// @Summary Add or update Providers
+// @Description Add or update Providers
+// @Accept  json
+// @Produce  json
+// @Param body  body requests.UpdateProfileRequest true "ProviderDetails"
+// @Success 200 {object} models.User
+// @Success 401 {object} errors.RequestError
+// @Success 403 {object} errors.RequestError
+// @Success 404 {object} errors.RequestError
+// @Router /providers/save [post]
+// @Security Authorization
+// @Tags Providers
+func (c ProviderController) Save() revel.Result {
+	//Deny Unauthorized users
+	if authorized := AuthCheck(c.Request); !authorized {
+		c.Response.Status = http.StatusUnauthorized
+		return c.RenderJSON(errors.ErrorUnauthorized(""))
+	}
+
+	user := AuthGetCurrentUser(c.Request)
+
+	var providerData requests.UpdateProfileRequest
+	var provider models.User
+	c.Params.BindJSON(&providerData)
+
+	if (providerData.Id == 0) && user.Role.Name != "admin" {
+		c.Response.Status = http.StatusForbidden
+		return c.RenderJSON(errors.ErrorForbidden("You have no permissions to create new providers"))
+	}
+
+	creatingNewProvider := false
+
+	if providerData.Id == 0 {
+		creatingNewProvider = true
+
+		var providerRole models.Role
+		DB.Where("`name` = ?", "provider").First(&providerRole)
+
+		provider = models.User{
+			RoleId: providerRole.Id,
+			Token: AuthRandToken(),
+			Email: "admin@test.lunch",
+		}
+
+	} else {
+		DB.
+			Where("id = ?", providerData.Id).
+			Where("`is_disabled` != 1").
+			First(&provider)
+
+		if providerData.Id == 0 {
+			c.Response.Status = http.StatusNotFound
+			return c.RenderJSON(errors.ErrorNotFound("Unable to find provider based on your request"))
+		}
+	}
+
+	appliedChanges, resultError, respStatus  := UpdateUserData(providerData, &provider, creatingNewProvider)
+	if respStatus != 0 {
+		c.Response.Status = respStatus
+		return c.RenderJSON(resultError)
+	}
+
+	if appliedChanges {
+
+		DB.Save(&provider)
+
+		cacheKey := "user_" + provider.Token
+		DB.
+			Where("`is_disabled` != 1").
+			Where("`token` = ?", provider.Token).
+			Preload("Image").
+			Preload("Role").
+			First(&provider)
+
+		go cache.Set(cacheKey, provider, 30*time.Minute)
+
+	}
+
+	return c.RenderJSON(provider)
+}
+
 // @Summary Get Provider Profile
 // @Description Get Provider Profile
 // @Accept  json
@@ -61,6 +143,7 @@ func (c ProviderController) Index() revel.Result {
 // @Success 200 {object} models.User
 // @Success 401 {object} errors.RequestError
 // @Router /provider/{profile_id} [get]
+// @Security Authorization
 // @Tags Providers
 func (c ProviderController) Profile() revel.Result {
 	//Deny Unauthorized users
@@ -105,11 +188,12 @@ func (c ProviderController) Profile() revel.Result {
 // @Accept  json
 // @Produce  json
 // @Param provider_id path int true "Provider Id"
-// @Success 200 {object} models.Menu
+// @Success 200 {array} models.Menu
 // @Success 401 {object} errors.RequestError
 // @Router /provider/{provider_id}/menus [get]
+// @Security Authorization
 // @Tags Menus
-func (c ProviderController) Menus() revel.Result { //TODO: IMPLEMENT THIS
+func (c ProviderController) Menus() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
 		c.Response.Status = http.StatusUnauthorized
@@ -147,11 +231,12 @@ func (c ProviderController) Menus() revel.Result { //TODO: IMPLEMENT THIS
 // @Produce  json
 // @Param provider_id path int true "Provider Id"
 // @Param date path string true "Menu Date"
-// @Success 200 {array} models.Menu
+// @Success 200 {object} models.Menu
 // @Success 401 {object} errors.RequestError
 // @Router /provider/{provider_id}/menus/{date} [get]
+// @Security Authorization
 // @Tags Menus
-func (c ProviderController) Menu() revel.Result { //TODO: IMPLEMENT THIS
+func (c ProviderController) Menu() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
 		c.Response.Status = http.StatusUnauthorized
@@ -210,6 +295,7 @@ func (c ProviderController) Menu() revel.Result { //TODO: IMPLEMENT THIS
 // @Success 401 {object} errors.RequestError
 // @Success 403 {object} errors.RequestError
 // @Router /provider/{provider_id}/menus/{date}/save [post]
+// @Security Authorization
 // @Tags Menus
 func (c ProviderController) SaveMenu() revel.Result {
 	//Deny Unauthorized users
@@ -244,6 +330,7 @@ func (c ProviderController) SaveMenu() revel.Result {
 // @Success 200 {object} models.Menu
 // @Success 401 {object} errors.RequestError
 // @Router /provider/{provider_id}/menus/{date}/clone/{new} [post]
+// @Security Authorization
 // @Tags Menus
 func (c ProviderController) CloneMenu() revel.Result {
 	//Deny Unauthorized users
@@ -282,6 +369,7 @@ func (c ProviderController) CloneMenu() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Success 404 {object} errors.RequestError
 // @Router /provider/{provider_id}/menus/{date}/delete [delete]
+// @Security Authorization
 // @Tags Menus
 func (c ProviderController) DeleteMenu() revel.Result {
 	//Deny Unauthorized users
@@ -342,6 +430,7 @@ func (c ProviderController) DeleteMenu() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Success 403 {object} errors.RequestError
 // @Router /provider/{provider_id}/dish/save [post]
+// @Security Authorization
 // @Tags Dishes
 func (c ProviderController) SaveDish() revel.Result {
 	//Deny Unauthorized users
@@ -399,12 +488,10 @@ func (c ProviderController) SaveDish() revel.Result {
 		}
 	}
 
-	//DB.Where("id = ?", dish.Id).Delete(models.Dish{})
-
 	DB.Create(&dishData)
 	DB.Save(&dishData)
 
-	return c.RenderJSON(dish.Images)
+	return c.RenderJSON(dish)
 }
 
 // @Summary Remove Provider's Dish by Id
@@ -417,6 +504,7 @@ func (c ProviderController) SaveDish() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Success 404 {object} errors.RequestError
 // @Router /provider/{provider_id}/dish/{id}/delete [delete]
+// @Security Authorization
 // @Tags Dishes
 func (c ProviderController) DeleteDish() revel.Result {
 	//Deny Unauthorized users
@@ -451,7 +539,7 @@ func (c ProviderController) DeleteDish() revel.Result {
 }
 
 
-// @Summary Master Orders History
+// @Summary Provider Orders History
 // @Description Get Master Orders History
 // @Accept  json
 // @Produce  json
@@ -463,7 +551,7 @@ func (c ProviderController) DeleteDish() revel.Result {
 // @Success 401 {object} errors.RequestError
 // @Router /provider/{provider_id}/history/{from_date}/to/{to_date} [get]
 // @Security Authorization
-// @Tags Master
+// @Tags Providers
 func (c ProviderController) History() revel.Result {
 	//Deny Unauthorized users
 	if authorized := AuthCheck(c.Request); !authorized {
@@ -600,7 +688,7 @@ func (c ProviderController) getMenuData(date string, newDate string) (requests.M
 }
 
 func (c ProviderController) updateMenuData(date string, menuItemsData requests.MenuUpdateRequest) (models.Menu, errors.RequestError) {
-//TODO: cannot make delivery after deadline
+
 	provider := AuthGetCurrentUser(c.Request)
 
 	menu := models.Menu{}
@@ -614,9 +702,15 @@ func (c ProviderController) updateMenuData(date string, menuItemsData requests.M
 	}
 	deadlineParsed, deadlineErr := carbon.Parse(carbon.DefaultFormat, menuItemsData.Deadline, provider.Timezone)
 	timeParsed, timeErr := carbon.Parse(carbon.TimeFormat, menuItemsData.DeliveryTime, provider.Timezone)
-	if (deadlineErr != nil) || (timeErr != nil) {
+	deliveryDateTimeParsed, deliveryDateErr := carbon.Parse(carbon.DefaultFormat, date + "" + menuItemsData.DeliveryTime, provider.Timezone)
+
+	if (deadlineErr != nil) || (timeErr != nil) || (deliveryDateErr != nil) {
 		c.Response.Status = http.StatusBadRequest
 		return menu, errors.ErrorBadRequest("Wrong delivery time or deadline was set", nil)
+	}
+	if deadlineParsed.Gt(deliveryDateTimeParsed) {
+		c.Response.Status = http.StatusBadRequest
+		return menu, errors.ErrorBadRequest("Deadline cannot be after delivery time", nil)
 	}
 
 	DB.

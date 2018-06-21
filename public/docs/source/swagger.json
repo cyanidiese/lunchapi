@@ -64,6 +64,53 @@
                 }
             }
         },
+        "/auth/register": {
+            "post": {
+                "description": "Get Login Info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/requests.AuthLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.AuthLoginResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.AuthLoginResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/categories/index": {
             "get": {
                 "description": "Get Categories List",
@@ -77,6 +124,39 @@
                     "Categories"
                 ],
                 "summary": "Get Categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Category"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/save": {
+            "post": {
+                "description": "Add or update Categories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Add or update Categories",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -311,7 +391,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Master"
+                    "Favorites"
                 ],
                 "summary": "Get Favorites",
                 "responses": {
@@ -347,7 +427,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Master"
+                    "Favorites"
                 ],
                 "summary": "Add Dish To Favorites",
                 "parameters": [
@@ -402,7 +482,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Master"
+                    "Favorites"
                 ],
                 "summary": "Remove Dish From Favorites",
                 "parameters": [
@@ -539,7 +619,7 @@
                         "Authorization": []
                     }
                 ],
-                "description": "Make Order for some Menu Items",
+                "description": "Orders List By Date",
                 "consumes": [
                     "application/json"
                 ],
@@ -547,9 +627,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Master"
+                    "Orders"
                 ],
-                "summary": "Make Order",
+                "summary": "Orders List By Date",
                 "parameters": [
                     {
                         "type": "string",
@@ -601,7 +681,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Master"
+                    "Orders"
                 ],
                 "summary": "Make Order",
                 "parameters": [
@@ -824,7 +904,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Dishes"
+                    "Notifications"
                 ],
                 "summary": "Get Notification",
                 "responses": {
@@ -1027,6 +1107,39 @@
                 }
             }
         },
+        "/offices/save": {
+            "post": {
+                "description": "Add or update Office",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Offices"
+                ],
+                "summary": "Add or update Office",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Office"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
         "/provider/{profile_id}": {
             "get": {
                 "description": "Get Provider Profile",
@@ -1202,9 +1315,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Master"
+                    "Providers"
                 ],
-                "summary": "Master Orders History",
+                "summary": "Provider Orders History",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1555,6 +1668,39 @@
                     }
                 }
             }
+        },
+        "/providers/save": {
+            "post": {
+                "description": "Add or update Providers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Providers"
+                ],
+                "summary": "Add or update Providers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1782,7 +1928,7 @@
                 "orderedCount": {
                     "type": "integer"
                 },
-                "user_id": {
+                "userId": {
                     "type": "integer"
                 }
             }
@@ -1847,6 +1993,9 @@
                     "type": "object",
                     "$ref": "#/definitions/models.Office"
                 },
+                "officeId": {
+                    "type": "integer"
+                },
                 "providerId": {
                     "type": "integer"
                 },
@@ -1865,15 +2014,19 @@
                 "id": {
                     "type": "integer"
                 },
-                "is_read": {
+                "isRead": {
                     "type": "boolean"
+                },
+                "notification": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.Notification"
                 },
                 "notificationId": {
                     "type": "integer"
                 },
-                "owner": {
+                "user": {
                     "type": "object",
-                    "$ref": "#/definitions/models.Notification"
+                    "$ref": "#/definitions/models.User"
                 },
                 "userId": {
                     "type": "integer"
