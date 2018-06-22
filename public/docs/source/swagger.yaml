@@ -125,6 +125,8 @@ definitions:
         type: string
       id:
         type: integer
+      isProvider:
+        type: boolean
       lat:
         type: number
       lng:
@@ -260,8 +262,12 @@ definitions:
     properties:
       alias:
         type: string
+      email:
+        type: string
       firstName:
         type: string
+      id:
+        type: integer
       imageGuid:
         type: string
       lang:
@@ -333,6 +339,75 @@ info:
   title: Test REST API
   version: "3.0"
 paths:
+  /admin/history/{from_date}/to/{to_date}:
+    get:
+      consumes:
+      - application/json
+      description: Get Full Orders History
+      parameters:
+      - description: Start Date
+        in: path
+        name: from_date
+        required: true
+        type: string
+      - description: End Date
+        in: path
+        name: to_date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Full Orders History
+      tags:
+      - Admin
+  /admin/users/{id}/disable:
+    put:
+      consumes:
+      - application/json
+      description: Disable User By Id
+      parameters:
+      - description: User Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Disable User
+      tags:
+      - Admin
   /auth/login:
     post:
       consumes:
@@ -395,6 +470,35 @@ paths:
       summary: Register
       tags:
       - Auth
+  /categories/{id}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Category By Id
+      parameters:
+      - description: Category Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Delete Category
+      tags:
+      - Categories
   /categories/index:
     get:
       consumes:
@@ -414,6 +518,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Categories
       tags:
       - Categories
@@ -422,20 +528,34 @@ paths:
       consumes:
       - application/json
       description: Add or update Categories
+      parameters:
+      - description: Category Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Category'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Category'
-            type: array
+            $ref: '#/definitions/models.Category'
+            type: object
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
       summary: Add or update Categories
       tags:
       - Categories
@@ -456,14 +576,15 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/responses.GeneralResponse'
-            type: array
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Delete Comment
       tags:
       - Comments
@@ -499,6 +620,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Comments
       tags:
       - Comments
@@ -538,6 +661,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Save Comment
       tags:
       - Comments
@@ -569,6 +694,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Dishes
       tags:
       - Dishes
@@ -847,7 +974,7 @@ paths:
       - application/json
       description: Update Master
       parameters:
-      - description: Menu Items Ids with count ordering
+      - description: Profile Details
         in: body
         name: body
         required: true
@@ -889,9 +1016,8 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/responses.GeneralResponse'
-            type: array
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -902,6 +1028,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Approve Notification
       tags:
       - Notifications
@@ -922,9 +1050,8 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/responses.GeneralResponse'
-            type: array
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -935,6 +1062,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Delete Notification
       tags:
       - Notifications
@@ -955,9 +1084,8 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/responses.GeneralResponse'
-            type: array
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -968,6 +1096,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Toggle Mark Notification As Read
       tags:
       - Notifications
@@ -1007,6 +1137,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Save Notification
       tags:
       - Notifications
@@ -1029,9 +1161,40 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Notification
       tags:
       - Notifications
+  /offices/{id}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Office By Id
+      parameters:
+      - description: Office Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.GeneralResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Delete Office
+      tags:
+      - Offices
   /offices/index:
     get:
       consumes:
@@ -1051,6 +1214,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Offices
       tags:
       - Offices
@@ -1058,22 +1223,36 @@ paths:
     post:
       consumes:
       - application/json
-      description: Add or update Office
+      description: Add or update Offices
+      parameters:
+      - description: Office Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Office'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Office'
-            type: array
+            $ref: '#/definitions/models.Office'
+            type: object
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
-      summary: Add or update Office
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Add or update Offices
       tags:
       - Offices
   /provider/{profile_id}:
@@ -1100,6 +1279,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Provider Profile
       tags:
       - Providers
@@ -1138,6 +1319,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Remove Provider's Dish by Id
       tags:
       - Dishes
@@ -1183,6 +1366,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Save Or Create Dish
       tags:
       - Dishes
@@ -1248,13 +1433,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Menu'
-            type: object
+            items:
+              $ref: '#/definitions/models.Menu'
+            type: array
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get List of Provider's Menus
       tags:
       - Menus
@@ -1280,14 +1468,15 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Menu'
-            type: array
+            $ref: '#/definitions/models.Menu'
+            type: object
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Provider's Menu by Date
       tags:
       - Menus
@@ -1325,6 +1514,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Clone Menu To Other Date
       tags:
       - Menus
@@ -1362,6 +1553,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Remove Provider's Menu by Date
       tags:
       - Menus
@@ -1411,6 +1604,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Save Menu Changes
       tags:
       - Menus
@@ -1433,6 +1628,8 @@ paths:
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+      security:
+      - Authorization: []
       summary: Get Providers
       tags:
       - Providers
@@ -1441,20 +1638,39 @@ paths:
       consumes:
       - application/json
       description: Add or update Providers
+      parameters:
+      - description: ProviderDetails
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateProfileRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.User'
-            type: array
+            $ref: '#/definitions/models.User'
+            type: object
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/errors.RequestError'
             type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
       summary: Add or update Providers
       tags:
       - Providers

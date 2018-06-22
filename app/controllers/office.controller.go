@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"lunchapi/app/errors"
 	"github.com/uniplaces/carbon"
+	"lunchapi/app/responses"
 )
 
 type OfficeController struct {
@@ -96,4 +97,54 @@ func (c OfficeController) Save() revel.Result {
 	go cache.Set("office_index", offices, 30*time.Minute)
 
 	return c.RenderJSON(officeData)
+}
+
+// @Summary Delete Office
+// @Description Delete Office By Id
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Office Id"
+// @Success 200 {object} responses.GeneralResponse
+// @Success 401 {object} errors.RequestError
+// @Router /offices/{id}/delete [delete]
+// @Security Authorization
+// @Tags Offices
+func (c OfficeController) Delete() revel.Result {
+	//Deny Unauthorized users
+	if authorized := AuthCheck(c.Request); !authorized {
+		c.Response.Status = http.StatusUnauthorized
+		return c.RenderJSON(errors.ErrorUnauthorized(""))
+	}
+
+	user := AuthGetCurrentUser(c.Request)
+	if user.Role.Name != "admin" {
+		c.Response.Status = http.StatusForbidden
+		return c.RenderJSON(errors.ErrorForbidden("Only admin can remove offices"))
+	}
+
+	var office, officeToReplace models.Office
+
+	id := c.Params.Route.Get("id")
+
+	DB.Where("id = ?", id).First(&office)
+
+	if office.Id == 0 {
+		c.Response.Status = http.StatusNotFound
+		return c.RenderJSON(errors.ErrorNotFound("Unable to find office based on your request"))
+	}
+
+	DB.
+		Where("id != ?", id).
+		Where("is_provider = ?", office.IsProvider).
+		First(&officeToReplace)
+
+	if officeToReplace.Id == 0 {
+		c.Response.Status = http.StatusNotFound
+		return c.RenderJSON(errors.ErrorNotFound("Unable to remove last office of this type"))
+	}
+
+	DB.Table("users").Where("office_id = ?", office.Id).Updates(map[string]interface{}{"name": officeToReplace.Id})
+	DB.Where("id = ?", id).Delete(models.Office{})
+
+	return c.RenderJSON(responses.SuccessfulResponse("Office has been successfully removed"))
 }

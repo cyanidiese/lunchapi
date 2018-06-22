@@ -17,6 +17,112 @@
     },
     "basePath": "/",
     "paths": {
+        "/admin/history/{from_date}/to/{to_date}": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Get Full Orders History",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Full Orders History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date",
+                        "name": "from_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date",
+                        "name": "to_date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Order"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/disable": {
+            "put": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Disable User By Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Disable User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Get Login Info",
@@ -113,6 +219,11 @@
         },
         "/categories/index": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Categories List",
                 "consumes": [
                     "application/json"
@@ -146,6 +257,11 @@
         },
         "/categories/save": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Add or update Categories",
                 "consumes": [
                     "application/json"
@@ -157,14 +273,76 @@
                     "Categories"
                 ],
                 "summary": "Add or update Categories",
+                "parameters": [
+                    {
+                        "description": "Category Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Category"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Category"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/models.Category"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{id}/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Delete Category By Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Delete Category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
                         }
                     },
                     "401": {
@@ -179,6 +357,11 @@
         },
         "/comments/index": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Comments List",
                 "consumes": [
                     "application/json"
@@ -232,6 +415,11 @@
         },
         "/comments/save": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Add or update your Comment",
                 "consumes": [
                     "application/json"
@@ -289,6 +477,11 @@
         },
         "/comments/{id}/delete": {
             "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Delete Comment By Id",
                 "consumes": [
                     "application/json"
@@ -313,10 +506,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.GeneralResponse"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
                         }
                     },
                     "401": {
@@ -331,6 +522,11 @@
         },
         "/dishes/index": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Dishes List",
                 "consumes": [
                     "application/json"
@@ -809,7 +1005,7 @@
                 "summary": "Master Update",
                 "parameters": [
                     {
-                        "description": "Menu Items Ids with count ordering",
+                        "description": "Profile Details",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -839,6 +1035,11 @@
         },
         "/notifications/create": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Add or update your Notification",
                 "consumes": [
                     "application/json"
@@ -896,6 +1097,11 @@
         },
         "/notifications/index": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Notifications List",
                 "consumes": [
                     "application/json"
@@ -929,6 +1135,11 @@
         },
         "/notifications/{id}/approve": {
             "put": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Approve Notification By Id",
                 "consumes": [
                     "application/json"
@@ -953,10 +1164,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.GeneralResponse"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
                         }
                     },
                     "401": {
@@ -978,6 +1187,11 @@
         },
         "/notifications/{id}/delete": {
             "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Delete Notification By Id",
                 "consumes": [
                     "application/json"
@@ -1002,10 +1216,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.GeneralResponse"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
                         }
                     },
                     "400": {
@@ -1027,6 +1239,11 @@
         },
         "/notifications/{id}/mark": {
             "put": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Toggle Mark Notification As Read",
                 "consumes": [
                     "application/json"
@@ -1051,10 +1268,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.GeneralResponse"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
                         }
                     },
                     "401": {
@@ -1076,6 +1291,11 @@
         },
         "/offices/index": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Offices List",
                 "consumes": [
                     "application/json"
@@ -1109,7 +1329,12 @@
         },
         "/offices/save": {
             "post": {
-                "description": "Add or update Office",
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Add or update Offices",
                 "consumes": [
                     "application/json"
                 ],
@@ -1119,15 +1344,77 @@
                 "tags": [
                     "Offices"
                 ],
-                "summary": "Add or update Office",
+                "summary": "Add or update Offices",
+                "parameters": [
+                    {
+                        "description": "Office Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Office"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Office"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/models.Office"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/offices/{id}/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Delete Office By Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Offices"
+                ],
+                "summary": "Delete Office",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Office Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/responses.GeneralResponse"
                         }
                     },
                     "401": {
@@ -1142,6 +1429,11 @@
         },
         "/provider/{profile_id}": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Provider Profile",
                 "consumes": [
                     "application/json"
@@ -1182,6 +1474,11 @@
         },
         "/provider/{provider_id}/dish/save": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Save dish changes or create a new one if no dish was found by ID in request body",
                 "consumes": [
                     "application/json"
@@ -1246,6 +1543,11 @@
         },
         "/provider/{provider_id}/dish/{id}/delete": {
             "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Remove Provider's Dish by Id",
                 "consumes": [
                     "application/json"
@@ -1370,6 +1672,11 @@
         },
         "/provider/{provider_id}/menus": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get List of Provider's Menus",
                 "consumes": [
                     "application/json"
@@ -1394,8 +1701,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.Menu"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Menu"
+                            }
                         }
                     },
                     "401": {
@@ -1410,6 +1719,11 @@
         },
         "/provider/{provider_id}/menus/{date}": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Provider's Menu by Date",
                 "consumes": [
                     "application/json"
@@ -1441,10 +1755,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Menu"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/models.Menu"
                         }
                     },
                     "401": {
@@ -1459,6 +1771,11 @@
         },
         "/provider/{provider_id}/menus/{date}/clone/{new}": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Clone Menu To Other Date",
                 "consumes": [
                     "application/json"
@@ -1513,6 +1830,11 @@
         },
         "/provider/{provider_id}/menus/{date}/delete": {
             "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Remove Provider's Menu by Date",
                 "consumes": [
                     "application/json"
@@ -1567,6 +1889,11 @@
         },
         "/provider/{provider_id}/menus/{date}/save": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Save Menu Changes",
                 "consumes": [
                     "application/json"
@@ -1638,6 +1965,11 @@
         },
         "/providers/index": {
             "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Get Providers List",
                 "consumes": [
                     "application/json"
@@ -1671,6 +2003,11 @@
         },
         "/providers/save": {
             "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
                 "description": "Add or update Providers",
                 "consumes": [
                     "application/json"
@@ -1682,18 +2019,42 @@
                     "Providers"
                 ],
                 "summary": "Add or update Providers",
+                "parameters": [
+                    {
+                        "description": "ProviderDetails",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/requests.UpdateProfileRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.User"
-                            }
+                            "type": "object",
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/errors.RequestError"
@@ -1892,6 +2253,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "isProvider": {
+                    "type": "boolean"
                 },
                 "lat": {
                     "type": "number"
@@ -2097,8 +2461,14 @@
                 "alias": {
                     "type": "string"
                 },
+                "email": {
+                    "type": "string"
+                },
                 "firstName": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "imageGuid": {
                     "type": "string"

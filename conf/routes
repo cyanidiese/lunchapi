@@ -12,11 +12,16 @@ GET, OPTIONS     /                                   App.Index
 POST, OPTIONS     /auth/login                        AuthController.Login
 POST, OPTIONS     /auth/register                     AuthController.Register
 
+GET, OPTIONS     /admin/history/:from_date/to/:to_date  AdminController.History
+PUT, OPTIONS     /admin/users/:id/disable               AdminController.Disable
+
 GET, OPTIONS     /offices/index                      OfficeController.Index
 POST, OPTIONS    /offices/save                       OfficeController.Save
+DELETE, OPTIONS  /offices/:id/delete                 OfficeController.Delete
 
 GET, OPTIONS     /categories/index                   CategoryController.Index
 POST, OPTIONS    /categories/save                    CategoryController.Save
+DELETE, OPTIONS  /categories/:id/delete              CategoryController.Delete
 
 GET, OPTIONS     /dishes/index                       DishController.Index
 
