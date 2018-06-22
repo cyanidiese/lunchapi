@@ -125,9 +125,6 @@ func (c AuthController) Register() revel.Result { //TODO: IMPLEMENT THIS
 func AuthGetToken(request *revel.Request) string {
 	authHeader := request.GetHttpHeader("Authorization")
 	authToken := strings.Replace(authHeader, "Bearer ", "", -1)
-	//authToken = "998d29a66db2a80dcae77fefa0a4e503" //TODO : detect real token for provider
-	//authToken = "b6428312ed326f744849fd67ecb46b0f" //TODO : detect real token for master
-	authToken = "ebdc113c0b0ddbc076fad0b958307860" //TODO : detect real token for admin
 	return authToken
 }
 

@@ -262,9 +262,19 @@ func (c MasterController) MakeOrder() revel.Result {
 		return c.RenderJSON(err)
 	}
 
-	menu, err := MasterController.checkMenuIsBeforeDeadline(c, menuDate, provider)
-	if err.Status != 0 {
-		return c.RenderJSON(err)
+
+	menu := models.Menu{}
+	if provider.IsShop {
+		DB.
+			Where("provider_id = ?", provider.Id).
+			Preload("Items").
+			First(&menu)
+	} else {
+		checkedMenu, err := MasterController.checkMenuIsBeforeDeadline(c, menuDate, provider)
+		if err.Status != 0 {
+			return c.RenderJSON(err)
+		}
+		menu = checkedMenu
 	}
 
 	master := AuthGetCurrentUser(c.Request)

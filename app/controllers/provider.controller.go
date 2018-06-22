@@ -262,17 +262,23 @@ func (c ProviderController) Menu() revel.Result {
 		return c.RenderJSON(errors.ErrorNotFound("Unable to find provider based on your request"))
 	}
 
-	dateParsed, dateErr := carbon.Parse(carbon.DateFormat, date, provider.Timezone)
+	query := DB.
+		Where("provider_id = ?", provider.Id)
 
-	if dateErr != nil {
-		c.Response.Status = http.StatusNotFound
-		return c.RenderJSON(errors.ErrorNotFound("Unable to find menu based on this date"))
+	if !provider.IsShop {
+
+		dateParsed, dateErr := carbon.Parse(carbon.DateFormat, date, provider.Timezone)
+
+		if dateErr != nil {
+			c.Response.Status = http.StatusNotFound
+			return c.RenderJSON(errors.ErrorNotFound("Unable to find menu based on this date"))
+		}
+
+		query = query.Where("date = ?", dateParsed.DateString())
 	}
 
-	DB.
-		Where("provider_id = ?", provider.Id).
-		Where("date = ?", dateParsed.DateString()).
-		Preload("Items").
+
+	query.Preload("Items").
 		First(&menu)
 
 	if menu.Id == 0 {
@@ -341,6 +347,12 @@ func (c ProviderController) CloneMenu() revel.Result {
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
+	}
+
+	provider := AuthGetCurrentUser(c.Request)
+	if provider.IsShop {
+		c.Response.Status = http.StatusBadRequest
+		return c.RenderJSON(errors.ErrorBadRequest("Shop provider cannot clone menus", nil))
 	}
 
 	date := c.Params.Route.Get("date")
@@ -694,38 +706,59 @@ func (c ProviderController) updateMenuData(date string, menuItemsData requests.M
 	menu := models.Menu{}
 	resultError := errors.RequestError{}
 
-	dateParsed, dateErr := carbon.Parse(carbon.DateFormat, date, provider.Timezone)
-
-	if dateErr != nil {
-		c.Response.Status = http.StatusNotFound
-		return menu, errors.ErrorNotFound("Unable to find menu based on this date")
-	}
-	deadlineParsed, deadlineErr := carbon.Parse(carbon.DefaultFormat, menuItemsData.Deadline, provider.Timezone)
-	timeParsed, timeErr := carbon.Parse(carbon.TimeFormat, menuItemsData.DeliveryTime, provider.Timezone)
-	deliveryDateTimeParsed, deliveryDateErr := carbon.Parse(carbon.DefaultFormat, date + "" + menuItemsData.DeliveryTime, provider.Timezone)
-
-	if (deadlineErr != nil) || (timeErr != nil) || (deliveryDateErr != nil) {
-		c.Response.Status = http.StatusBadRequest
-		return menu, errors.ErrorBadRequest("Wrong delivery time or deadline was set", nil)
-	}
-	if deadlineParsed.Gt(deliveryDateTimeParsed) {
-		c.Response.Status = http.StatusBadRequest
-		return menu, errors.ErrorBadRequest("Deadline cannot be after delivery time", nil)
-	}
-
-	DB.
-		Where("provider_id = ?", provider.Id).
-		Where("date = ?", dateParsed.DateString()).
-		First(&menu)
-
 	menuIsNew := false
+
+	nowCarbon, err := carbon.NowInLocation(provider.Timezone)
+	if err != nil {
+		c.Response.Status = http.StatusBadRequest
+		return menu, errors.ErrorBadRequest("Cannot cet current time in provider's timezone", nil)
+	}
+	dateCarbon := nowCarbon
+	timeCarbon := nowCarbon
+	deadlineCarbon := nowCarbon
+
+	if provider.IsShop {
+
+		DB.
+			Where("provider_id = ?", provider.Id).
+			First(&menu)
+
+	} else {
+		dateParsed, dateErr := carbon.Parse(carbon.DateFormat, date, provider.Timezone)
+		deadlineParsed, deadlineErr := carbon.Parse(carbon.DefaultFormat, menuItemsData.Deadline, provider.Timezone)
+		timeParsed, timeErr := carbon.Parse(carbon.TimeFormat, menuItemsData.DeliveryTime, provider.Timezone)
+		deliveryDateTimeParsed, deliveryDateErr := carbon.Parse(carbon.DefaultFormat, date+""+menuItemsData.DeliveryTime, provider.Timezone)
+		if dateErr != nil {
+			c.Response.Status = http.StatusNotFound
+			return menu, errors.ErrorNotFound("Unable to find menu based on this date")
+		}
+		if (deadlineErr != nil) || (timeErr != nil) || (deliveryDateErr != nil) {
+			c.Response.Status = http.StatusBadRequest
+			return menu, errors.ErrorBadRequest("Wrong delivery time or deadline was set", nil)
+		}
+		if deadlineParsed.Gt(deliveryDateTimeParsed) {
+			c.Response.Status = http.StatusBadRequest
+			return menu, errors.ErrorBadRequest("Deadline cannot be after delivery time", nil)
+		}
+
+		dateCarbon = dateParsed
+		timeCarbon = timeParsed
+		deadlineCarbon = deadlineParsed
+
+	}
+
+	query := DB.Where("provider_id = ?", provider.Id)
+	if provider.IsShop {
+		query = query.Where("date = ?", dateCarbon.DateString())
+	}
+	query.First(&menu)
 
 	if menu.Id == 0 {
 
 		timeNow, _ := carbon.NowInLocation(provider.Timezone)
 
 		menu.ProviderId = provider.Id
-		menu.Date = dateParsed.DateString()
+		menu.Date = dateCarbon.DateString()
 		menu.CreatedAt = timeNow.Time
 		menu.UpdatedAt = timeNow.Time
 		DB.Create(&menu)
@@ -734,8 +767,8 @@ func (c ProviderController) updateMenuData(date string, menuItemsData requests.M
 		menuIsNew = true
 	}
 
-	menu.DeadlineAt = deadlineParsed.DateTimeString()
-	menu.DeliveryTime = timeParsed.TimeString()
+	menu.DeadlineAt = deadlineCarbon.DateTimeString()
+	menu.DeliveryTime = timeCarbon.TimeString()
 	DB.Save(&menu)
 
 	dishesIds := []int64{}
