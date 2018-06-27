@@ -47,18 +47,15 @@ func (c AuthController) Login() revel.Result {
 		First(&user)
 
 	if user.Id == 0 {
-		response.Message = "NO EMAIL " + authData.Email
 		return c.RenderJSON(response)
 	}
 
 	passwordMatch, err := AuthComparePasswords(user.Password, authData.Password)
 
 	if err != nil {
-		response.Message = err.Error()
 		return c.RenderJSON(response)
 	}
 	if !passwordMatch {
-		response.Message = "JUST MISMATCH"
 		return c.RenderJSON(response)
 	}
 
@@ -99,18 +96,15 @@ func (c AuthController) Register() revel.Result { //TODO: IMPLEMENT THIS
 		First(&user)
 
 	if user.Id == 0 {
-		response.Message = "NO EMAIL " + authData.Email
 		return c.RenderJSON(response)
 	}
 
 	passwordMatch, err := AuthComparePasswords(user.Password, authData.Password)
 
 	if err != nil {
-		response.Message = err.Error()
 		return c.RenderJSON(response)
 	}
 	if !passwordMatch {
-		response.Message = "JUST MISMATCH"
 		return c.RenderJSON(response)
 	}
 
