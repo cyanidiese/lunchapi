@@ -13,7 +13,7 @@ type Dish struct {
 	Weight        float64     `gorm:"column:weight" json:"weight"`
 	Calories      float64     `gorm:"column:calories" json:"calories"`
 	Price         float64     `gorm:"column:price" json:"price"`
-	IsRemoved     bool        `gorm:"column:is_removed" json:"-"`
+	IsRemoved     bool        `gorm:"column:is_removed" json:"isRemoved"`
 	Category      Category    `gorm:"foreignkey:CategoryId;association_foreignkey:Id" json:"-"`
 	Provider      User        `gorm:"foreignkey:ProviderId;association_foreignkey:Id" json:"-"`
 	Images        []Image     `gorm:"foreignkey:DishId;association_foreignkey:Id" json:"images"`

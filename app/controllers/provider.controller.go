@@ -95,7 +95,7 @@ func (c ProviderController) Save() revel.Result {
 		provider = models.User{
 			RoleId: providerRole.Id,
 			Token: AuthRandToken(),
-			Email: "admin@test.lunch",
+			Email: "admin@test.lunch",//TODO: change to real
 		}
 
 	} else {
@@ -220,6 +220,9 @@ func (c ProviderController) Menus() revel.Result {
 	DB.
 		Where("provider_id = ?", providerId).
 		Preload("Items").
+		Preload("Items.Dish").
+		Preload("Items.Dish.Name").
+		Preload("Items.Dish.Images").
 		Find(&menus)
 
 	return c.RenderJSON(menus)
@@ -278,7 +281,12 @@ func (c ProviderController) Menu() revel.Result {
 	}
 
 
-	query.Preload("Items").
+	query.
+		Preload("Items").
+		Preload("Items.Dish").
+		Preload("Items.Dish.Name").
+		Preload("Items.Dish.Description").
+		Preload("Items.Dish.Images").
 		First(&menu)
 
 	if menu.Id == 0 {
@@ -545,9 +553,15 @@ func (c ProviderController) DeleteDish() revel.Result {
 		return c.RenderJSON(errors.ErrorNotFound("Unable to find dish based on your request"))
 	}
 
-	DB.Where("id = ?", dish.Id).Delete(models.Dish{})
+	dish.IsRemoved = !dish.IsRemoved
+	DB.Save(&dish)
 
-	return c.RenderJSON(responses.SuccessfulResponse("Dish has been successfully removed"))
+	messagePart := "removed"
+	if !dish.IsRemoved {
+		messagePart = "restored"
+	}
+
+	return c.RenderJSON(responses.SuccessfulResponse("Dish has been successfully " + messagePart))
 }
 
 
@@ -661,7 +675,7 @@ func (c ProviderController) getMenuData(date string, newDate string) (requests.M
 		return result, errors.ErrorBadRequest("Wrong destination date format", nil)
 	}
 
-	differenceInDays := newDateParsed.DiffInDays(dateParsed, false)
+	differenceInDays := dateParsed.DiffInDays(newDateParsed, false)
 
 	DB.
 		Where("provider_id = ?", provider.Id).
@@ -680,7 +694,7 @@ func (c ProviderController) getMenuData(date string, newDate string) (requests.M
 	deadlineParsed, errEE := carbon.Parse(carbon.DefaultFormat, deadline, provider.Timezone)
 	if errEE != nil {
 		c.Response.Status = http.StatusBadRequest
-		return result, errors.ErrorBadRequest("Wrong Deadline date format "+menu.DeadlineAt+errEE.Error(), nil)
+		return result, errors.ErrorBadRequest("Wrong Deadline date format ", nil)
 	}
 
 	result.DeliveryTime = menu.DeliveryTime
@@ -727,7 +741,7 @@ func (c ProviderController) updateMenuData(date string, menuItemsData requests.M
 		dateParsed, dateErr := carbon.Parse(carbon.DateFormat, date, provider.Timezone)
 		deadlineParsed, deadlineErr := carbon.Parse(carbon.DefaultFormat, menuItemsData.Deadline, provider.Timezone)
 		timeParsed, timeErr := carbon.Parse(carbon.TimeFormat, menuItemsData.DeliveryTime, provider.Timezone)
-		deliveryDateTimeParsed, deliveryDateErr := carbon.Parse(carbon.DefaultFormat, date+""+menuItemsData.DeliveryTime, provider.Timezone)
+		deliveryDateTimeParsed, deliveryDateErr := carbon.Parse(carbon.DefaultFormat, date+" "+menuItemsData.DeliveryTime, provider.Timezone)
 		if dateErr != nil {
 			c.Response.Status = http.StatusNotFound
 			return menu, errors.ErrorNotFound("Unable to find menu based on this date")
@@ -740,6 +754,14 @@ func (c ProviderController) updateMenuData(date string, menuItemsData requests.M
 			c.Response.Status = http.StatusBadRequest
 			return menu, errors.ErrorBadRequest("Deadline cannot be after delivery time", nil)
 		}
+		if nowCarbon.Gt(deadlineParsed) {
+			c.Response.Status = http.StatusBadRequest
+			return menu, errors.ErrorBadRequest("Deadline cannot be in past", nil)
+		}
+		if nowCarbon.Gt(deliveryDateTimeParsed) {
+			c.Response.Status = http.StatusBadRequest
+			return menu, errors.ErrorBadRequest("Delivery time cannot be in past", nil)
+		}
 
 		dateCarbon = dateParsed
 		timeCarbon = timeParsed
@@ -748,7 +770,7 @@ func (c ProviderController) updateMenuData(date string, menuItemsData requests.M
 	}
 
 	query := DB.Where("provider_id = ?", provider.Id)
-	if provider.IsShop {
+	if !provider.IsShop {
 		query = query.Where("date = ?", dateCarbon.DateString())
 	}
 	query.First(&menu)
