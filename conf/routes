@@ -55,7 +55,12 @@ GET, OPTIONS       /master/orders/:provider_id/:date         MasterController.Or
 POST, OPTIONS      /master/orders/:provider_id/:date/make    MasterController.MakeOrder
 GET, OPTIONS       /master/favorites                         MasterController.Favorites
 POST, OPTIONS      /master/favorites/add                     MasterController.AddFavorite
+POST, OPTIONS      /master/favorites/toggle                  MasterController.ToggleFavorite
 DELETE, OPTIONS    /master/favorites/remove                  MasterController.RemoveFavorite
+
+GET, OPTIONS       /user/index                               UserController.Index
+POST, OPTIONS      /user/language/:lang                      UserController.Language
+POST, OPTIONS      /user/provider/:provider_id               UserController.Provider
 
 # Ignore favicon requests
 GET, OPTIONS       /favicon.ico                            404

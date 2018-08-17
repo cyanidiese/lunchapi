@@ -423,7 +423,7 @@ func (c MasterController) AddFavorite() revel.Result {
 	favorite := models.Favorite{}
 	dish := models.Dish{}
 
-	DB.Where("dish_id = ?", requestBody.Id).First(&dish)
+	DB.Where("id = ?", requestBody.Id).First(&dish)
 
 	if dish.Id == 0 {
 		c.Response.Status = http.StatusNotFound
@@ -437,6 +437,53 @@ func (c MasterController) AddFavorite() revel.Result {
 		favorite.DishId = requestBody.Id
 		DB.Create(&favorite)
 		DB.Save(&favorite)
+	}
+
+	return MasterController.Favorites(c)
+}
+
+// @Summary Toggle Dish In Favorites
+// @Description Toggle Dish In Favorites
+// @Accept  json
+// @Produce  json
+// @Param body body structs.SimpleId true "Dish Id"
+// @Success 200 {object} structs.IdsArray
+// @Success 401 {object} errors.RequestError
+// @Success 404 {object} errors.RequestError
+// @Router /master/favorites/toggle [post]
+// @Security Authorization
+// @Tags Favorites
+func (c MasterController) ToggleFavorite() revel.Result {
+	//Deny Unauthorized users
+	if authorized := AuthCheck(c.Request); !authorized {
+		c.Response.Status = http.StatusUnauthorized
+		return c.RenderJSON(errors.ErrorUnauthorized(""))
+	}
+
+	var requestBody structs.SimpleId
+	c.Params.BindJSON(&requestBody)
+
+	master := AuthGetCurrentUser(c.Request)
+
+	favorite := models.Favorite{}
+	dish := models.Dish{}
+
+	DB.Where("id = ?", requestBody.Id).First(&dish)
+
+	if dish.Id == 0 {
+		c.Response.Status = http.StatusNotFound
+		return c.RenderJSON(errors.ErrorNotFound("Unable to find dish by id"))
+	}
+
+	DB.Where("dish_id = ?", requestBody.Id).Where("user_id = ?", master.Id).First(&favorite)
+
+	if favorite.Id == 0 {
+		favorite.UserId = master.Id
+		favorite.DishId = requestBody.Id
+		DB.Create(&favorite)
+		DB.Save(&favorite)
+	} else {
+		DB.Where("dish_id = ?", requestBody.Id).Where("user_id = ?", master.Id).Delete(models.Favorite{})
 	}
 
 	return MasterController.Favorites(c)
