@@ -27,11 +27,6 @@ type ProviderController struct {
 // @Security Authorization
 // @Tags Providers
 func (c ProviderController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	providerRole := models.Role{}
 	providers := []models.User{}
@@ -67,11 +62,6 @@ func (c ProviderController) Index() revel.Result {
 // @Security Authorization
 // @Tags Providers
 func (c ProviderController) Save() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -146,11 +136,6 @@ func (c ProviderController) Save() revel.Result {
 // @Security Authorization
 // @Tags Providers
 func (c ProviderController) Profile() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	providerId := c.Params.Route.Get("provider_id")
 
@@ -194,11 +179,6 @@ func (c ProviderController) Profile() revel.Result {
 // @Security Authorization
 // @Tags Menus
 func (c ProviderController) Menus() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	providerId := c.Params.Route.Get("provider_id")
 
@@ -240,12 +220,6 @@ func (c ProviderController) Menus() revel.Result {
 // @Security Authorization
 // @Tags Menus
 func (c ProviderController) Menu() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
-
 
 	provider := models.User{}
 	menu := models.Menu{}
@@ -312,11 +286,6 @@ func (c ProviderController) Menu() revel.Result {
 // @Security Authorization
 // @Tags Menus
 func (c ProviderController) SaveMenu() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
@@ -347,11 +316,6 @@ func (c ProviderController) SaveMenu() revel.Result {
 // @Security Authorization
 // @Tags Menus
 func (c ProviderController) CloneMenu() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
@@ -392,11 +356,6 @@ func (c ProviderController) CloneMenu() revel.Result {
 // @Security Authorization
 // @Tags Menus
 func (c ProviderController) DeleteMenu() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
@@ -453,11 +412,6 @@ func (c ProviderController) DeleteMenu() revel.Result {
 // @Security Authorization
 // @Tags Dishes
 func (c ProviderController) SaveDish() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
@@ -511,6 +465,48 @@ func (c ProviderController) SaveDish() revel.Result {
 	DB.Create(&dishData)
 	DB.Save(&dishData)
 
+	//If provider is a shop we need to update also related menu item and create menu if not exists
+	if provider.IsShop {
+
+		var menu models.Menu
+		DB.
+			Where("provider_id = ?", provider.Id).
+			First(&menu)
+
+		if menu.Id == 0 {
+
+			timeNow, _ := carbon.NowInLocation(provider.Timezone)
+
+			menu.Date = timeNow.DateString()
+			menu.DeadlineAt = timeNow.DateTimeString()
+			menu.DeliveryTime = timeNow.TimeString()
+			menu.ProviderId = provider.Id
+
+			DB.Create(&menu)
+			DB.Save(&menu)
+		}
+
+		var menuItem models.MenuItem
+
+		DB.
+			Where("menu_id = ?", menu.Id).
+			Where("dish_id = ?", dishData.Id).
+			First(&menuItem)
+
+		if menuItem.Id != 0 {
+			menuItem.Price = dishData.Price
+		} else {
+			menuItem.MenuId = menu.Id
+			menuItem.DishId = dishData.Id
+			menuItem.Price = dishData.Price
+			menuItem.InitialCount = 0
+			menuItem.AvailableCount = 0
+
+			DB.Create(&menuItem)
+		}
+		DB.Save(&menuItem)
+	}
+
 	return c.RenderJSON(dish)
 }
 
@@ -527,11 +523,6 @@ func (c ProviderController) SaveDish() revel.Result {
 // @Security Authorization
 // @Tags Dishes
 func (c ProviderController) DeleteDish() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
@@ -579,11 +570,6 @@ func (c ProviderController) DeleteDish() revel.Result {
 // @Security Authorization
 // @Tags Providers
 func (c ProviderController) History() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
 		return c.RenderJSON(err)
@@ -621,7 +607,13 @@ func (c ProviderController) History() revel.Result {
 			QueryExpr()).
 		Preload("Master").
 		Preload("Master.Image").
+		Preload("Master.Office").
+		Preload("Master.Office.Title").
 		Preload("MenuItem").
+		Preload("MenuItem.Dish").
+		Preload("MenuItem.Dish.Images").
+		Preload("MenuItem.Dish.Name").
+		Preload("MenuItem.Dish.Description").
 		Find(&orders)
 
 	return c.RenderJSON(orders)
@@ -681,6 +673,7 @@ func (c ProviderController) getMenuData(date string, newDate string) (requests.M
 		Where("provider_id = ?", provider.Id).
 		Where("date = ?", dateParsed.DateString()).
 		Preload("Items").
+		Preload("Items.Dish").
 		First(&menu)
 
 	if menu.Id == 0 {
@@ -703,9 +696,11 @@ func (c ProviderController) getMenuData(date string, newDate string) (requests.M
 	counts := []requests.ObjectCounter{}
 
 	for index := range menu.Items {
-		dishId := menu.Items[index].DishId
-		initialCount := menu.Items[index].InitialCount
-		counts = append(counts, requests.ObjectCounter{Id: dishId, Count: initialCount})
+		if !menu.Items[index].Dish.IsRemoved {
+			dishId := menu.Items[index].DishId
+			initialCount := menu.Items[index].InitialCount
+			counts = append(counts, requests.ObjectCounter{Id: dishId, Count: initialCount})
+		}
 	}
 
 	result.Items = counts

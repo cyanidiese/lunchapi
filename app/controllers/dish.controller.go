@@ -3,8 +3,6 @@ package controllers
 import (
 	"github.com/revel/revel"
 	"lunchapi/app/models"
-	"net/http"
-	"lunchapi/app/errors"
 )
 
 type DishController struct {
@@ -23,11 +21,6 @@ type DishController struct {
 // @Security Authorization
 // @Tags Dishes
 func (c DishController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	dishes := []models.Dish{}
 

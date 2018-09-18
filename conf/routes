@@ -47,16 +47,17 @@ POST, OPTIONS    /provider/:provider_id/dish/save                     ProviderCo
 DELETE, OPTIONS  /provider/:provider_id/dish/:id/delete               ProviderController.DeleteDish
 GET, OPTIONS     /provider/:provider_id/history/:from_date/to/:to_date  ProviderController.History
 
-GET, OPTIONS       /master/index                             MasterController.Index
-POST, OPTIONS      /master/update                            MasterController.Update
-GET, OPTIONS       /master/stats/:from_date/to/:to_date      MasterController.Stats
-GET, OPTIONS       /master/history/:from_date/to/:to_date    MasterController.History
-GET, OPTIONS       /master/orders/:provider_id/:date         MasterController.Orders
-POST, OPTIONS      /master/orders/:provider_id/:date/make    MasterController.MakeOrder
-GET, OPTIONS       /master/favorites                         MasterController.Favorites
-POST, OPTIONS      /master/favorites/add                     MasterController.AddFavorite
-POST, OPTIONS      /master/favorites/toggle                  MasterController.ToggleFavorite
-DELETE, OPTIONS    /master/favorites/remove                  MasterController.RemoveFavorite
+GET, OPTIONS       /master/index                                       MasterController.Index
+POST, OPTIONS      /master/update                                      MasterController.Update
+GET, OPTIONS       /master/stats/:from_date/to/:to_date                MasterController.Stats
+GET, OPTIONS       /master/history/:from_date/to/:to_date              MasterController.History
+GET, OPTIONS       /master/orders/:provider_id/:date                   MasterController.Orders
+POST, OPTIONS      /master/orders/:provider_id/:date/make              MasterController.MakeOrder
+DELETE, OPTIONS    /master/orders/:provider_id/:date/:order_id/remove  MasterController.RemoveOrder
+GET, OPTIONS       /master/favorites                                   MasterController.Favorites
+POST, OPTIONS      /master/favorites/add                               MasterController.AddFavorite
+POST, OPTIONS      /master/favorites/toggle                            MasterController.ToggleFavorite
+DELETE, OPTIONS    /master/favorites/remove                            MasterController.RemoveFavorite
 
 GET, OPTIONS       /user/index                               UserController.Index
 POST, OPTIONS      /user/language/:lang                      UserController.Language

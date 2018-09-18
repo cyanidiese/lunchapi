@@ -24,11 +24,6 @@ type UserController struct {
 // @Security Authorization
 // @Tags User
 func (c UserController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -46,11 +41,6 @@ func (c UserController) Index() revel.Result {
 // @Security Authorization
 // @Tags User
 func (c UserController) Language() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -81,11 +71,6 @@ func (c UserController) Language() revel.Result {
 // @Security Authorization
 // @Tags User
 func (c UserController) Provider() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 	provider := models.User{}

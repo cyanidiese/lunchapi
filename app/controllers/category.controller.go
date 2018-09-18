@@ -25,11 +25,6 @@ type CategoryController struct {
 // @Security Authorization
 // @Tags Categories
 func (c CategoryController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	categories := []models.Category{}
 
@@ -55,11 +50,6 @@ func (c CategoryController) Index() revel.Result {
 // @Security Authorization
 // @Tags Categories
 func (c CategoryController) Save() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -110,11 +100,6 @@ func (c CategoryController) Save() revel.Result {
 // @Security Authorization
 // @Tags Categories
 func (c CategoryController) Delete() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 	if user.Role.Name != "admin" {

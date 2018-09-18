@@ -28,11 +28,6 @@ type CommentController struct {
 // @Security Authorization
 // @Tags Comments
 func (c CommentController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	comments := []models.Comment{}
 
@@ -71,11 +66,6 @@ func (c CommentController) Index() revel.Result {
 // @Security Authorization
 // @Tags Comments
 func (c CommentController) Save() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	var commentData models.Comment
 	c.Params.BindJSON(&commentData)
@@ -128,11 +118,6 @@ func (c CommentController) Save() revel.Result {
 // @Security Authorization
 // @Tags Comments
 func (c CommentController) Delete() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 

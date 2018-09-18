@@ -52,6 +52,8 @@ definitions:
         items:
           $ref: '#/definitions/models.Image'
         type: array
+      isRemoved:
+        type: boolean
       name:
         $ref: '#/definitions/models.Translation'
         type: object
@@ -151,6 +153,10 @@ definitions:
         type: object
       orderedCount:
         type: integer
+      paid:
+        type: boolean
+      price:
+        type: number
       userId:
         type: integer
     type: object
@@ -787,6 +793,42 @@ paths:
       security:
       - Authorization: []
       summary: Remove Dish From Favorites
+      tags:
+      - Favorites
+  /master/favorites/toggle:
+    post:
+      consumes:
+      - application/json
+      description: Toggle Dish In Favorites
+      parameters:
+      - description: Dish Id
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/structs.SimpleId'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/structs.IdsArray'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Toggle Dish In Favorites
       tags:
       - Favorites
   /master/history/{from_date}/to/{to_date}:
@@ -1674,6 +1716,87 @@ paths:
       summary: Add or update Providers
       tags:
       - Providers
+  /user/index:
+    get:
+      consumes:
+      - application/json
+      description: Get Login Info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: User Info
+      tags:
+      - User
+  /user/language/{lang}:
+    post:
+      consumes:
+      - application/json
+      description: Update preferred language of user
+      parameters:
+      - description: Language (EN, UA, RU)
+        in: path
+        name: lang
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Update Language
+      tags:
+      - User
+  /user/provider/{provider_id}:
+    post:
+      consumes:
+      - application/json
+      description: Update preferred provider of user
+      parameters:
+      - description: Provider ID to set
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.RequestError'
+            type: object
+      security:
+      - Authorization: []
+      summary: Update Provider
+      tags:
+      - User
 securityDefinitions:
   Authorization:
     in: header

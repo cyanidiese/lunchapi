@@ -711,6 +711,61 @@
                 }
             }
         },
+        "/master/favorites/toggle": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Toggle Dish In Favorites",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "Toggle Dish In Favorites",
+                "parameters": [
+                    {
+                        "description": "Dish Id",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/structs.SimpleId"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/structs.IdsArray"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
         "/master/history/{from_date}/to/{to_date}": {
             "get": {
                 "security": [
@@ -2062,6 +2117,132 @@
                     }
                 }
             }
+        },
+        "/user/index": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Get Login Info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "User Info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/language/{lang}": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Update preferred language of user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update Language",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Language (EN, UA, RU)",
+                        "name": "lang",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/provider/{provider_id}": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Update preferred provider of user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update Provider",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider ID to set",
+                        "name": "provider_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/errors.RequestError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2142,6 +2323,9 @@
                     "items": {
                         "$ref": "#/definitions/models.Image"
                     }
+                },
+                "isRemoved": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "object",
@@ -2291,6 +2475,12 @@
                 },
                 "orderedCount": {
                     "type": "integer"
+                },
+                "paid": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "number"
                 },
                 "userId": {
                     "type": "integer"

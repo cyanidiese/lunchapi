@@ -25,11 +25,6 @@ type OfficeController struct {
 // @Security Authorization
 // @Tags Offices
 func (c OfficeController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	offices := []models.Office{}
 
@@ -55,11 +50,6 @@ func (c OfficeController) Index() revel.Result {
 // @Security Authorization
 // @Tags Offices
 func (c OfficeController) Save() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -110,11 +100,6 @@ func (c OfficeController) Save() revel.Result {
 // @Security Authorization
 // @Tags Offices
 func (c OfficeController) Delete() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 	if user.Role.Name != "admin" {

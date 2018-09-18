@@ -28,11 +28,6 @@ type MasterController struct {
 // @Security Authorization
 // @Tags Master
 func (c MasterController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -50,11 +45,6 @@ func (c MasterController) Index() revel.Result {
 // @Security Authorization
 // @Tags Master
 func (c MasterController) Update() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -99,11 +89,6 @@ func (c MasterController) Update() revel.Result {
 // @Security Authorization
 // @Tags Master
 func (c MasterController) Stats() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	master := AuthGetCurrentUser(c.Request)
 
@@ -135,9 +120,9 @@ func (c MasterController) Stats() revel.Result {
 	}
 
 	result := responses.StatsResponse{
-		Weight: weight,
+		Weight:   weight,
 		Calories: calories,
-		Price: price,
+		Price:    price,
 	}
 
 	return c.RenderJSON(result)
@@ -156,11 +141,6 @@ func (c MasterController) Stats() revel.Result {
 // @Security Authorization
 // @Tags Master
 func (c MasterController) History() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	master := AuthGetCurrentUser(c.Request)
 
@@ -202,11 +182,6 @@ func (c MasterController) History() revel.Result {
 // @Security Authorization
 // @Tags Orders
 func (c MasterController) Orders() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	providerId := c.Params.Route.Get("provider_id")
 	menuDate := c.Params.Route.Get("date")
@@ -230,7 +205,15 @@ func (c MasterController) Orders() revel.Result {
 	for _, val := range items {
 		itemsIds = append(itemsIds, val.Id)
 	}
-	DB.Where("user_id = ? ", master.Id).Where("item_id IN (?) ", itemsIds).Find(&orders)
+	DB.
+		Where("user_id = ? ", master.Id).
+		Where("item_id IN (?) ", itemsIds).
+		Preload("MenuItem").
+		Preload("MenuItem.Dish").
+		Preload("MenuItem.Dish.Name").
+		Preload("MenuItem.Dish.Description").
+		Preload("MenuItem.Dish.Images").
+		Find(&orders)
 
 	return c.RenderJSON(orders)
 }
@@ -248,11 +231,6 @@ func (c MasterController) Orders() revel.Result {
 // @Security Authorization
 // @Tags Orders
 func (c MasterController) MakeOrder() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	providerId := c.Params.Route.Get("provider_id")
 	menuDate := c.Params.Route.Get("date")
@@ -261,7 +239,6 @@ func (c MasterController) MakeOrder() revel.Result {
 	if err.Status != 0 {
 		return c.RenderJSON(err)
 	}
-
 
 	menu := models.Menu{}
 	if provider.IsShop {
@@ -313,47 +290,71 @@ func (c MasterController) MakeOrder() revel.Result {
 		}
 	}
 
+	nowCarbon, _ := carbon.NowInLocation(provider.Timezone)
+
 	for _, val := range requestBody.Items {
 
 		item := models.MenuItem{}
 		order := models.Order{}
 		DB.Where("id = ? ", val.Id).Find(&item)
-		DB.Where("user_id = ? ", master.Id).Where("item_id = ? ", val.Id).Find(&order)
 
 		var orderedCount int64 = 0
 
-		// if order is new and user has no orders of this menu item
-		if order.Id == 0 {
+		// if provider is shop then create new order every time
+		if provider.IsShop {
 			if val.Count > 0 {
 				orderedCount = val.Count
 
+				order := models.Order{}
 				order.UserId = master.Id
 				order.ItemId = val.Id
 				order.OrderedCount = val.Count
+				order.Price = item.Price
+				order.Date = nowCarbon.DateString()
 
 				DB.Create(&order)
 				DB.Save(&order)
-
 			}
 		} else {
-			//if users are removing their order
-			if val.Count == 0 {
-				orderedCount = -1 * order.OrderedCount
-				DB.Delete(&order)
-			} else {
 
-				//if user tries to make order count negative we just set it to 0
-				if order.OrderedCount+val.Count < 0 {
-					val.Count = -1 * order.OrderedCount
+			DB.Where("user_id = ? ", master.Id).Where("item_id = ? ", val.Id).Find(&order)
+
+			// if order is new and user has no orders of this menu item
+			if order.Id == 0 {
+				if val.Count > 0 {
+					orderedCount = val.Count
+
+					order.UserId = master.Id
+					order.ItemId = val.Id
+					order.OrderedCount = val.Count
+					order.Price = item.Price
+					order.Date = menu.Date
+
+					DB.Create(&order)
+					DB.Save(&order)
+
 				}
-
-				//if new count is not 0 - it is difference
-				orderedCount = val.Count
-				order.OrderedCount = order.OrderedCount + orderedCount
-				DB.Save(&order)
-
-				if order.OrderedCount == 0 {
+			} else {
+				//if users are removing their order
+				if val.Count == 0 {
+					orderedCount = -1 * order.OrderedCount
 					DB.Delete(&order)
+				} else {
+
+					//if user tries to make order count negative we just set it to 0
+					if order.OrderedCount+val.Count < 0 {
+						val.Count = -1 * order.OrderedCount
+					}
+
+					//if new count is not 0 - it is difference
+					orderedCount = val.Count
+					order.OrderedCount = order.OrderedCount + orderedCount
+					order.Price = item.Price
+					DB.Save(&order)
+
+					if order.OrderedCount == 0 {
+						DB.Delete(&order)
+					}
 				}
 			}
 		}
@@ -366,8 +367,72 @@ func (c MasterController) MakeOrder() revel.Result {
 	return MasterController.Orders(c)
 }
 
+// @Summary Remove Order
+// @Description Remove Order for some Menu Items
+// @Accept  json
+// @Produce  json
+// @Param date        path string true "Date"
+// @Param order_id    path int    true "Order Id"
+// @Param provider_id path int    true "Provider Id"
+// @Success 200 {array} models.Order
+// @Success 401 {object} errors.RequestError
+// @Router /master/orders/{provider_id}/{date}/{order_id}/remove [delete]
+// @Security Authorization
+// @Tags Orders
+func (c MasterController) RemoveOrder() revel.Result {
+
+	providerId := c.Params.Route.Get("provider_id")
+	menuDate := c.Params.Route.Get("date")
+
+	provider, err := MasterController.checkProviderIsAvailable(c, providerId)
+	if err.Status != 0 {
+		return c.RenderJSON(err)
+	}
+
+	menu := models.Menu{}
+	if provider.IsShop {
+		DB.
+			Where("provider_id = ?", provider.Id).
+			Preload("Items").
+			First(&menu)
+	} else {
+		checkedMenu, err := MasterController.checkMenuIsBeforeDeadline(c, menuDate, provider)
+		if err.Status != 0 {
+			return c.RenderJSON(err)
+		}
+		menu = checkedMenu
+	}
+
+	master := AuthGetCurrentUser(c.Request)
+
+	orderId := c.Params.Route.Get("order_id")
+
+	item := models.MenuItem{}
+	order := models.Order{}
+	DB.Where("user_id = ? ", master.Id).Where("id = ? ", orderId).Find(&order)
+
+	if order.Id == 0 {
+		c.Response.Status = http.StatusBadRequest
+		return c.RenderJSON(errors.ErrorBadRequest("There is no order found by this ID", nil))
+	}
+
+	DB.Where("id = ? ", order.ItemId).Find(&item)
+
+	if order.Id == 0 {
+		c.Response.Status = http.StatusBadRequest
+		return c.RenderJSON(errors.ErrorBadRequest("There is no menu item found by this order", nil))
+	}
+
+	item.AvailableCount = item.AvailableCount + order.OrderedCount
+	DB.Save(&item)
+
+	DB.Delete(&order)
+
+	return MasterController.Orders(c)
+}
+
 // @Summary Get Favorites
-// @Description Make Order for some Dishes
+// @Description Get Favorites
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} structs.IdsArray
@@ -376,11 +441,6 @@ func (c MasterController) MakeOrder() revel.Result {
 // @Security Authorization
 // @Tags Favorites
 func (c MasterController) Favorites() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	master := AuthGetCurrentUser(c.Request)
 
@@ -409,11 +469,6 @@ func (c MasterController) Favorites() revel.Result {
 // @Security Authorization
 // @Tags Favorites
 func (c MasterController) AddFavorite() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	var requestBody structs.SimpleId
 	c.Params.BindJSON(&requestBody)
@@ -454,11 +509,6 @@ func (c MasterController) AddFavorite() revel.Result {
 // @Security Authorization
 // @Tags Favorites
 func (c MasterController) ToggleFavorite() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	var requestBody structs.SimpleId
 	c.Params.BindJSON(&requestBody)
@@ -500,11 +550,6 @@ func (c MasterController) ToggleFavorite() revel.Result {
 // @Security Authorization
 // @Tags Favorites
 func (c MasterController) RemoveFavorite() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	var requestBody structs.SimpleId
 	c.Params.BindJSON(&requestBody)

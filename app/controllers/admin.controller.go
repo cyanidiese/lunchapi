@@ -27,11 +27,6 @@ type AdminController struct {
 // @Security Authorization
 // @Tags Admin
 func (c AdminController) History() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	currentUser := AuthGetCurrentUser(c.Request)
 	if currentUser.Role.Name != "admin" {
@@ -76,11 +71,6 @@ func (c AdminController) History() revel.Result {
 // @Security Authorization
 // @Tags Admin
 func (c AdminController) Disable() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	currentUser := AuthGetCurrentUser(c.Request)
 	if currentUser.Role.Name != "admin" {

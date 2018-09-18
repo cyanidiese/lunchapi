@@ -24,11 +24,6 @@ type NotificationController struct {
 // @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Index() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -67,11 +62,6 @@ func (c NotificationController) Index() revel.Result {
 // @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Create() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -111,11 +101,6 @@ func (c NotificationController) Create() revel.Result {
 // @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Delete() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -160,11 +145,6 @@ func (c NotificationController) Delete() revel.Result {
 // @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Approve() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
@@ -245,11 +225,6 @@ func (c NotificationController) Approve() revel.Result {
 // @Security Authorization
 // @Tags Notifications
 func (c NotificationController) Mark() revel.Result {
-	//Deny Unauthorized users
-	if authorized := AuthCheck(c.Request); !authorized {
-		c.Response.Status = http.StatusUnauthorized
-		return c.RenderJSON(errors.ErrorUnauthorized(""))
-	}
 
 	user := AuthGetCurrentUser(c.Request)
 
