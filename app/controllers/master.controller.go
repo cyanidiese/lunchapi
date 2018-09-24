@@ -600,15 +600,19 @@ func (c MasterController) checkMenuIsAvailable(menuDate string, provider models.
 
 	dateParsed, dateErr := carbon.Parse(carbon.DateFormat, menuDate, provider.Timezone)
 
-	if dateErr != nil {
+	if (dateErr != nil) && !provider.IsShop {
 		c.Response.Status = http.StatusBadRequest
 		return menu, errors.ErrorBadRequest("Unable to find menu based on this date", nil)
 	}
 
-	DB.
-		Where("provider_id = ?", provider.Id).
-		Where("date = ?", dateParsed.DateString()).
-		Preload("Items").
+	query := DB.
+		Where("provider_id = ?", provider.Id)
+
+	if !provider.IsShop {
+		query = query.Where("date = ?", dateParsed.DateString())
+	}
+
+	query.Preload("Items").
 		First(&menu)
 
 	if menu.Id == 0 {

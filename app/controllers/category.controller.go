@@ -9,6 +9,7 @@ import (
 	"lunchapi/app/errors"
 	"github.com/uniplaces/carbon"
 	"lunchapi/app/responses"
+	"strconv"
 )
 
 type CategoryController struct {
@@ -53,18 +54,23 @@ func (c CategoryController) Save() revel.Result {
 
 	user := AuthGetCurrentUser(c.Request)
 
-	if user.Role.Name != "admin" {
+	if user.Role.Name == "master" {
 		c.Response.Status = http.StatusForbidden
-		return c.RenderJSON(errors.ErrorForbidden("Only admin can add or update categories"))
+		return c.RenderJSON(errors.ErrorForbidden("Only admin or provider can add or update categories"))
 	}
 
 	var categoryData, category models.Category
 	c.Params.BindJSON(&categoryData)
 
 	if categoryData.Id != 0 {
-		DB.
-			Where("id = ?", categoryData.Id).
-			Preload("Title").
+		query := DB.
+			Where("id = ?", categoryData.Id)
+
+		if user.Role.Name == "provider" {
+			query = query.Where("provider_id = ?", user.Id)
+		}
+
+		query.Preload("Title").
 			First(&category)
 
 		if category.Id == 0 {
@@ -77,14 +83,20 @@ func (c CategoryController) Save() revel.Result {
 		category.Title.Ru = categoryData.Title.Ru
 		category.Title.UpdatedAt = carbon.Now().Time
 		categoryData.Title = category.Title
+
+
+	} else {
+		if user.Role.Name == "provider" {
+			categoryData.ProviderId = user.Id
+		} else {
+			categoryData.ProviderId = 0
+		}
 	}
 
 	DB.Create(&categoryData)
 	DB.Save(&categoryData)
 
-	categories := []models.Category{}
-	DB.Preload("Title").Find(&categories)
-	go cache.Set("category_index", categories, 30*time.Minute)
+	CategoryController.UpdateCategories(c)
 
 	return c.RenderJSON(categoryData)
 }
@@ -102,23 +114,38 @@ func (c CategoryController) Save() revel.Result {
 func (c CategoryController) Delete() revel.Result {
 
 	user := AuthGetCurrentUser(c.Request)
-	if user.Role.Name != "admin" {
+
+	if user.Role.Name == "master" {
 		c.Response.Status = http.StatusForbidden
-		return c.RenderJSON(errors.ErrorForbidden("Only admin can remove categories"))
+		return c.RenderJSON(errors.ErrorForbidden("Only admin or provider can remove categories"))
 	}
 
 	var category, categoryToReplace models.Category
 
 	id := c.Params.Route.Get("id")
 
-	DB.Where("id = ?", id).First(&category)
+	query := DB.Where("id = ?", id)
+	if user.Role.Name == "provider" {
+		query = query.Where("provider_id = ?", user.Id)
+	}
+	query.First(&category)
 
 	if category.Id == 0 {
 		c.Response.Status = http.StatusNotFound
 		return c.RenderJSON(errors.ErrorNotFound("Unable to find category based on your request"))
 	}
 
-	DB.Where("id != ?", id).First(&categoryToReplace)
+	assignIdParam := c.Params.Query.Get("assign_id")
+	if assignIdParam != "" {
+		assignId, assignError := strconv.ParseInt(assignIdParam, 10, 64)
+		if assignError != nil {
+			c.Response.Status = http.StatusNotFound
+			return c.RenderJSON(errors.ErrorNotFound("Unable to find category based on your request"))
+		}
+		DB.Where("id != ?", assignId).First(&categoryToReplace)
+	} else {
+		DB.Where("id != ?", id).First(&categoryToReplace)
+	}
 
 	if categoryToReplace.Id == 0 {
 		c.Response.Status = http.StatusNotFound
@@ -128,5 +155,15 @@ func (c CategoryController) Delete() revel.Result {
 	DB.Table("dishes").Where("category_id = ?", category.Id).Updates(map[string]interface{}{"name": categoryToReplace.Id})
 	DB.Where("id = ?", id).Delete(models.Category{})
 
+	CategoryController.UpdateCategories(c)
+
 	return c.RenderJSON(responses.SuccessfulResponse("Category has been successfully removed"))
+}
+
+func (c CategoryController) UpdateCategories() {
+
+	categories := []models.Category{}
+	DB.Preload("Title").Find(&categories)
+	go cache.Set("category_index", categories, 30*time.Minute)
+
 }

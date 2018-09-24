@@ -11,6 +11,7 @@ import (
 	"lunchapi/app/requests"
 	"strings"
 	"lunchapi/app/responses"
+	"strconv"
 )
 
 type ProviderController struct {
@@ -571,29 +572,36 @@ func (c ProviderController) DeleteDish() revel.Result {
 // @Tags Providers
 func (c ProviderController) History() revel.Result {
 
-	if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
-		return c.RenderJSON(err)
-	}
+	//if err := ProviderController.checkProviderPermissions(c); err.Status != 0 {
+	//	return c.RenderJSON(err)
+	//}
 
-	provider := AuthGetCurrentUser(c.Request)
+	user := AuthGetCurrentUser(c.Request)
 
+	providerIdStr := c.Params.Route.Get("provider_id")
 	fromDate := c.Params.Route.Get("from_date")
 	toDate := c.Params.Route.Get("to_date")
 
-	fromDateParsed, fromDateErr := carbon.Parse(carbon.DateFormat, fromDate, provider.Timezone)
-	toDateParsed, toDateErr := carbon.Parse(carbon.DateFormat, toDate, provider.Timezone)
+	fromDateParsed, fromDateErr := carbon.Parse(carbon.DateFormat, fromDate, user.Timezone)
+	toDateParsed, toDateErr := carbon.Parse(carbon.DateFormat, toDate, user.Timezone)
+	providerId, providerIdErr := strconv.ParseInt(providerIdStr, 10, 64)
 
-	if fromDateErr != nil {
+	if providerIdErr != nil {
 		c.Response.Status = http.StatusBadRequest
-		return c.RenderJSON(errors.ErrorBadRequest("Wrong date range" + fromDateErr.Error(), nil))
+		return c.RenderJSON(errors.ErrorBadRequest("Wrong provider id", nil))
 	}
-	if toDateErr != nil {
+	if (fromDateErr != nil) || (toDateErr != nil) {
 		c.Response.Status = http.StatusBadRequest
-		return c.RenderJSON(errors.ErrorBadRequest("Wrong date range" + toDateErr.Error(), nil))
+		return c.RenderJSON(errors.ErrorBadRequest("Wrong date range", nil))
+	}
+	if (user.Role.Name == "provider") && (user.Id != providerId) {
+		c.Response.Status = http.StatusForbidden
+		return c.RenderJSON(errors.ErrorForbidden("You have no permissions to view orders history of this provider"))
 	}
 
 	orders := []models.Order{}
-	DB.
+
+	query := DB.
 		Where("created_at > ? ", fromDateParsed.StartOfDay().DateTimeString()).
 		Where("updated_at < ? ", toDateParsed.EndOfDay().DateTimeString()).
 		Where("item_id IN (?)",
@@ -602,10 +610,15 @@ func (c ProviderController) History() revel.Result {
 			Select("id").Where("menu_id IN (?)",
 			DB.
 				Model(models.Menu{}).
-				Select("id").Where("provider_id = ?", provider.Id).
+				Select("id").Where("provider_id = ?", providerId).
 				QueryExpr()).
-			QueryExpr()).
-		Preload("Master").
+			QueryExpr())
+
+	if user.Role.Name == "master" {
+		query = query.Where("user_id = ? ", user.Id)
+	}
+
+	query.Preload("Master").
 		Preload("Master.Image").
 		Preload("Master.Office").
 		Preload("Master.Office.Title").
